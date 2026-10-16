@@ -1,28 +1,694 @@
 <template>
-  <div class="page">
-    <text class="title">{{$t('app.title')}}</text>
+  <div class="app">
+    <!-- Screen 1: Pusula (index 0). Screen 2: GPS (index 1, reached by swiping up). -->
+    <swiper class="swiper"
+            vertical="true"
+            indicator="false"
+            index="{{ currentIndex }}"
+            onchange="onSwiperChange">
+
+      <!-- ============== Screen 1: Pusula ============== -->
+      <div class="screen">
+        <!-- Katman 1: rotating dial (empty center) -->
+        <div class="dial-layer">
+          <image class="dial"
+                 src="/common/dial.png"
+                 style="transform: rotate(-{{ dialAngle }}deg); transition: transform 120ms linear;"></image>
+        </div>
+
+        <!-- Katman 2: fixed index marker at top-center, aligned with dial top edge -->
+        <div class="marker-layer">
+          <image class="marker" src="/common/index-marker.png"></image>
+        </div>
+
+        <!-- accuracy dot, just below the marker -->
+        <div class="dot-layer">
+          <div class="accuracy-dot" style="background-color: {{ accuracyColor }};"></div>
+        </div>
+
+        <!-- Katman 3: readout in the dial's empty center -->
+        <div class="readout-layer">
+          <div class="readout-inner" if="{{ !preparing }}">
+            <text class="degree">{{ degreeText }}</text>
+            <text class="cardinal">{{ cardinalText }}</text>
+          </div>
+          <text class="preparing pulsing" if="{{ preparing }}">Sensörler Hazırlanıyor...</text>
+        </div>
+
+        <!-- source badge near the bottom edge -->
+        <div class="badge-layer">
+          <div class="badge" style="background-color: {{ badgeBg }};">
+            <text class="badge-text" style="color: {{ badgeColor }};">{{ badgeText }}</text>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== Screen 2: GPS ============== -->
+      <div class="screen gps">
+        <div class="gps-list">
+          <div class="data-row">
+            <text class="label">Enlem</text>
+            <div class="value-col">
+              <text class="value">{{ latText }}</text>
+              <text class="sub">{{ latDms }}</text>
+            </div>
+          </div>
+
+          <div class="data-row">
+            <text class="label">Boylam</text>
+            <div class="value-col">
+              <text class="value">{{ lonText }}</text>
+              <text class="sub">{{ lonDms }}</text>
+            </div>
+          </div>
+
+          <div class="data-row">
+            <text class="label">İrtifa</text>
+            <text class="value">{{ altText }}</text>
+          </div>
+
+          <div class="data-row">
+            <text class="label">Hız</text>
+            <text class="value">{{ speedText }}</text>
+          </div>
+
+          <div class="data-row">
+            <text class="label">Doğruluk</text>
+            <text class="value">{{ accText }}</text>
+          </div>
+
+          <div class="data-row">
+            <text class="label">Zaman</text>
+            <text class="value">{{ timeText }}</text>
+          </div>
+        </div>
+
+        <!-- Durum çubuğu -->
+        <div class="status-row">
+          <div class="status-dot {{ gpsPulsing ? 'pulsing' : '' }}" style="background-color: {{ gpsStatusColor }};"></div>
+          <text class="status-text" style="color: {{ gpsStatusColor }};">{{ gpsStatusText }}</text>
+        </div>
+      </div>
+
+    </swiper>
   </div>
 </template>
 
 <script>
+import geolocation from '@system.geolocation'
+import sensor from '@system.sensor'
+import brightness from '@system.brightness'
+
+// Dev simulate mode: when true no real API calls are made. A slowly rotating
+// fake heading and fake coordinates/altitude/speed drive the UI every second so
+// it can be previewed in an emulator. Keep this path small and isolated.
+const SIMULATE = false
+
 export default {
-  private: {}
+  private: {
+    currentIndex: 0,
+
+    // ---- Screen 1: compass ----
+    dialAngle: 0,
+    degreeText: '--',
+    cardinalText: '--',
+    preparing: true,
+    accuracyColor: '#BDBDBD',
+    badgeText: 'Sensörler Hazırlanıyor...',
+    badgeBg: '#333333',
+    badgeColor: '#FFFFFF',
+    headingSource: '',
+
+    // ---- Screen 2: GPS ----
+    latText: '--',
+    lonText: '--',
+    latDms: '--',
+    lonDms: '--',
+    altText: '--',
+    speedText: '--',
+    accText: '--',
+    timeText: '--',
+    gpsStatusText: 'Uydu Bağlantısı Kuruluyor...',
+    gpsStatusColor: '#FFD600',
+    gpsPulsing: true
+  },
+
+  onInit() {
+    // non-reactive internal state
+    this._compassActive = false
+    this._compassUnsupported = false
+    this._compassHasData = false
+    this._compassHeading = null
+    this._geoActive = false
+    this._geoUnsupported = false
+    this._lastFix = null
+    this._simTimer = null
+    this._headingTarget = 0
+    this._simHeading = 0
+  },
+
+  onShow() {
+    this._setKeepScreenOn(true)
+    if (SIMULATE) {
+      this._startSimulate()
+      return
+    }
+    this._startLocation()
+    if (this.currentIndex === 0) {
+      this._startCompass()
+    }
+  },
+
+  onHide() {
+    this._stopSimulate()
+    this._stopLocation()
+    this._stopCompass()
+    this._setKeepScreenOn(false)
+  },
+
+  onDestroy() {
+    this._stopSimulate()
+    this._stopLocation()
+    this._stopCompass()
+    this._setKeepScreenOn(false)
+  },
+
+  // ------------------------------------------------------------------ swiper
+  onSwiperChange(e) {
+    const idx = (e && typeof e.index === 'number') ? e.index : 0
+    this.currentIndex = idx
+    if (SIMULATE) return
+    if (idx === 0) {
+      this._startCompass()
+    } else {
+      this._stopCompass()
+    }
+  },
+
+  // --------------------------------------------------------------- compass
+  _startCompass() {
+    if (this._compassActive || this._compassUnsupported) return
+    try {
+      if (!sensor || typeof sensor.subscribeCompass !== 'function') {
+        this._compassFail(1000)
+        return
+      }
+      this._compassActive = true
+      sensor.subscribeCompass({
+        callback: (res) => this._onCompass(res),
+        fail: (data, code) => {
+          this._compassActive = false
+          this._compassFail(code)
+        }
+      })
+    } catch (err) {
+      this._compassActive = false
+      this._compassFail(1000)
+    }
+  },
+
+  _stopCompass() {
+    if (!this._compassActive) return
+    this._compassActive = false
+    try {
+      if (sensor && typeof sensor.unsubscribeCompass === 'function') {
+        sensor.unsubscribeCompass()
+      }
+    } catch (err) {}
+  },
+
+  _onCompass(res) {
+    try {
+      if (!res || typeof res.direction !== 'number') return
+      // direction is the angle in radians between the device y-axis and magnetic north
+      const deg = (res.direction * 180 / Math.PI + 360) % 360
+      this._compassHasData = true
+      this.accuracyColor = this._accuracyColor(res.accuracy)
+      this._setHeading(deg, 'compass')
+    } catch (err) {}
+  },
+
+  _compassFail(code) {
+    const c = Number(code)
+    // 1000 / 203 / unknown => compass sensor not available on this device
+    if (c === 1000 || c === 203 || isNaN(c)) {
+      this._compassUnsupported = true
+    }
+    this.accuracyColor = '#FF4D4D'
+    if (this._compassHeading === null && this.headingSource !== 'gps') {
+      // no usable heading yet: surface the error now
+      this.preparing = false
+      this.degreeText = '--'
+      this.cardinalText = '--'
+    }
+    this._updateBadge()
+  },
+
+  // ----------------------------------------------------------- geolocation
+  _startLocation() {
+    if (this._geoActive || this._geoUnsupported) return
+    try {
+      if (!geolocation || typeof geolocation.subscribe !== 'function') {
+        this._geoFail(203)
+        return
+      }
+      this._geoActive = true
+      this._setGpsSearching()
+      geolocation.subscribe({
+        callback: (res) => this._onGeo(res),
+        fail: (data, code) => {
+          this._geoActive = false
+          this._geoFail(code)
+        }
+      })
+    } catch (err) {
+      this._geoActive = false
+      this._geoFail(203)
+    }
+  },
+
+  _stopLocation() {
+    if (!this._geoActive) return
+    this._geoActive = false
+    try {
+      if (geolocation && typeof geolocation.unsubscribe === 'function') {
+        geolocation.unsubscribe()
+      }
+    } catch (err) {}
+  },
+
+  _onGeo(res) {
+    try {
+      if (!res) return
+      const lat = res.latitude
+      const lon = res.longitude
+      if (typeof lat !== 'number' || typeof lon !== 'number') return
+
+      this.latText = lat.toFixed(5) + '°'
+      this.lonText = lon.toFixed(5) + '°'
+      this.latDms = this._dms(lat, true)
+      this.lonDms = this._dms(lon, false)
+
+      this.altText = (typeof res.altitude === 'number' ? Math.round(res.altitude) : '--') + ' m'
+      const speed = (typeof res.speed === 'number') ? res.speed : 0
+      this.speedText = speed.toFixed(1) + ' m/s (' + (speed * 3.6).toFixed(1) + ' km/h)'
+      this.accText = '± ' + (typeof res.accuracy === 'number' ? res.accuracy.toFixed(1) : '--') + ' m'
+      this.timeText = this._clock(new Date())
+
+      this.gpsStatusText = 'Sinyal Güçlü'
+      this.gpsStatusColor = '#00C853'
+      this.gpsPulsing = false
+
+      // GPS course-over-ground heading is only used when the compass is
+      // unavailable / has not produced data yet.
+      if (this._compassUnsupported || !this._compassHasData) {
+        this._maybeGpsHeading(lat, lon, speed)
+      }
+    } catch (err) {}
+  },
+
+  _geoFail(code) {
+    const c = Number(code)
+    this.gpsPulsing = false
+    this.gpsStatusColor = '#CF6679'
+    if (c === 203) {
+      this._geoUnsupported = true
+      this.gpsStatusText = 'Desteklenmiyor'
+    } else if (c === 204) {
+      this.gpsStatusText = 'Zaman Aşımı'
+    } else if (c >= 1000) {
+      this.gpsStatusText = 'Konum Kapalı'
+    } else {
+      this.gpsStatusText = 'SİNYAL YOK (Kod: ' + c + ')'
+    }
+  },
+
+  _setGpsSearching() {
+    if (this.gpsStatusText === 'Sinyal Güçlü') return
+    this.gpsStatusText = 'Konum Aranıyor...'
+    this.gpsStatusColor = '#FFD600'
+    this.gpsPulsing = true
+  },
+
+  _maybeGpsHeading(lat, lon, speed) {
+    const prev = this._lastFix
+    this._lastFix = { lat: lat, lon: lon }
+    if (!prev) return
+    if (speed < 0.5) return // stopped: keep last heading, do not update
+    const dist = this._distance(prev.lat, prev.lon, lat, lon)
+    if (dist < 3) return
+    const bearing = this._bearing(prev.lat, prev.lon, lat, lon)
+    this._setHeading(bearing, 'gps')
+  },
+
+  // -------------------------------------------------------- heading / badge
+  _setHeading(deg, source) {
+    if (typeof deg !== 'number' || isNaN(deg)) return
+    const target = ((deg % 360) + 360) % 360
+    this._headingTarget = target
+    this.headingSource = source
+    if (source === 'compass') {
+      this._compassHeading = target
+    }
+
+    // software angle wrapping so 359 -> 0 takes the short path
+    const delta = ((target - this.dialAngle + 540) % 360) - 180
+    this.dialAngle = this.dialAngle + delta
+
+    this.degreeText = Math.round(target) + '°'
+    this.cardinalText = this._cardinal(target)
+    this.preparing = false
+    this._updateBadge()
+  },
+
+  _updateBadge() {
+    if (this.headingSource === 'gps') {
+      this.badgeText = 'GPS YÖNÜ'
+      this.badgeBg = '#443300'
+      this.badgeColor = '#FFD600'
+    } else if (this.headingSource === 'compass') {
+      this.badgeText = 'MANYETO'
+      this.badgeBg = '#333333'
+      this.badgeColor = '#FFFFFF'
+    } else if (this._compassUnsupported) {
+      this.badgeText = 'SENSÖR DESTEKLENMİYOR'
+      this.badgeBg = '#442222'
+      this.badgeColor = '#CF6679'
+    } else {
+      this.badgeText = 'Sensörler Hazırlanıyor...'
+      this.badgeBg = '#333333'
+      this.badgeColor = '#FFFFFF'
+    }
+  },
+
+  // ------------------------------------------------------------ brightness
+  _setKeepScreenOn(on) {
+    try {
+      if (brightness && typeof brightness.setKeepScreenOn === 'function') {
+        brightness.setKeepScreenOn({
+          keepScreenOn: !!on,
+          success: () => {},
+          fail: () => {}
+        })
+      }
+    } catch (err) {}
+  },
+
+  // --------------------------------------------------------------- simulate
+  _startSimulate() {
+    if (this._simTimer) return
+    this._simHeading = 0
+    this._simTimer = setInterval(() => {
+      this._simHeading = (this._simHeading + 7) % 360
+      this.accuracyColor = '#00C853'
+      this._setHeading(this._simHeading, 'compass')
+      this.latText = '41.00823°'
+      this.lonText = '28.97839°'
+      this.latDms = this._dms(41.00823, true)
+      this.lonDms = this._dms(28.97839, false)
+      this.altText = '152 m'
+      this.speedText = '1.2 m/s (4.3 km/h)'
+      this.accText = '± 3.5 m'
+      this.timeText = this._clock(new Date())
+      this.gpsStatusText = 'Sinyal Güçlü'
+      this.gpsStatusColor = '#00C853'
+      this.gpsPulsing = false
+    }, 1000)
+  },
+
+  _stopSimulate() {
+    if (this._simTimer) {
+      clearInterval(this._simTimer)
+      this._simTimer = null
+    }
+  },
+
+  // ---------------------------------------------------------- pure helpers
+  _accuracyColor(a) {
+    if (a === 3) return '#00C853' // high
+    if (a === 2) return '#FFD600' // medium
+    if (a === 1) return '#FF9800' // low
+    if (a === -1) return '#FF4D4D' // disconnected
+    return '#BDBDBD' // unknown
+  },
+
+  _cardinal(deg) {
+    const dirs = ['K', 'KD', 'D', 'GD', 'G', 'GB', 'B', 'KB']
+    const idx = Math.round(deg / 45) % 8
+    return dirs[idx]
+  },
+
+  _dms(deg, isLat) {
+    const abs = Math.abs(deg)
+    const d = Math.floor(abs)
+    const mFloat = (abs - d) * 60
+    const m = Math.floor(mFloat)
+    const s = ((mFloat - m) * 60).toFixed(1)
+    const hemi = isLat ? (deg >= 0 ? 'K' : 'G') : (deg >= 0 ? 'D' : 'B')
+    return d + '° ' + this._pad2(m) + "' " + s + '" ' + hemi
+  },
+
+  _pad2(n) {
+    return n < 10 ? '0' + n : '' + n
+  },
+
+  _clock(date) {
+    return this._pad2(date.getHours()) + ':' + this._pad2(date.getMinutes()) + ':' + this._pad2(date.getSeconds())
+  },
+
+  _distance(lat1, lon1, lat2, lon2) {
+    const R = 6371000
+    const toRad = (x) => x * Math.PI / 180
+    const dLat = toRad(lat2 - lat1)
+    const dLon = toRad(lon2 - lon1)
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  },
+
+  _bearing(lat1, lon1, lat2, lon2) {
+    const toRad = (x) => x * Math.PI / 180
+    const toDeg = (x) => x * 180 / Math.PI
+    const dLon = toRad(lon2 - lon1)
+    const y = Math.sin(dLon) * Math.cos(toRad(lat2))
+    const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon)
+    return (toDeg(Math.atan2(y, x)) + 360) % 360
+  }
 }
 </script>
 
 <style>
-.page {
+.app {
   width: 100%;
   height: 100%;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   background-color: #000000;
 }
 
-.title {
-  font-size: 24px;
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===================== Screen 1: Pusula ===================== */
+.dial-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dial {
+  width: 360px;
+  height: 360px;
+}
+
+.marker-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.marker {
+  width: 40px;
+  height: 40px;
+}
+
+.dot-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 54px;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.accuracy-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background-color: #BDBDBD;
+}
+
+.readout-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.readout-inner {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.degree {
+  font-size: 64px;
+  font-weight: bold;
+  color: #FFFFFF;
   text-align: center;
-  color: #ffffff;
+}
+
+.cardinal {
+  font-size: 20px;
+  color: #BDBDBD;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.preparing {
+  font-size: 20px;
+  color: #BDBDBD;
+  text-align: center;
+}
+
+.badge-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 10px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-text {
+  font-size: 14px;
+}
+
+/* ===================== Screen 2: GPS ===================== */
+.gps {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 16px;
+}
+
+.gps-list {
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-grow: 1;
+}
+
+.data-row {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 16px;
+  color: #BDBDBD;
+}
+
+.value-col {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.value {
+  font-size: 20px;
+  color: #FFFFFF;
+  text-align: right;
+}
+
+.sub {
+  font-size: 14px;
+  color: #BDBDBD;
+  text-align: right;
+}
+
+.status-row {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  margin-right: 8px;
+  background-color: #FFD600;
+}
+
+.status-text {
+  font-size: 16px;
+}
+
+/* ===================== animation ===================== */
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.2;
+  }
+}
+
+.pulsing {
+  animation-name: pulse;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 </style>
