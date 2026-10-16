@@ -7,7 +7,8 @@ telefon ve kablosuz (Bluetooth) bağlantı üzerinden **REDMI WATCH 4** saatine 
 Vela (JS) hızlı uygulamaları `.rpk` uzantılı paketlerdir. Saat ile telefon arasındaki iletişim
 Bluetooth üzerinden yapılır ve REDMI WATCH 4'te **cihazın kendi mağazası dışında doğrudan
 `.rpk` yükleme** desteği standart Mi Fitness (小米运动健康) sürümünde **kapalıdır**. Aşağıda,
-toplulukta gerçekten çalışan üç yol ve bugünkü (2025–2026) durumları anlatılmıştır.
+toplulukta RW4 için kanıtlanmış üç yol, ayrıca açık kaynaklı ama **deneysel** bir dördüncü yol
+(Gadgetbridge) ve bugünkü (2025–2026) durumları anlatılmıştır.
 
 > **Önemli terminoloji:** Xiaomi'nin telefon uygulaması Türkçe mağazalarda "Mi Fitness",
 > Çince'de "小米运动健康" (Xiaomi Sağlık) olarak geçer. Eski adı "小米穿戴 / Xiaomi Wear"
@@ -22,6 +23,7 @@ toplulukta gerçekten çalışan üç yol ve bugünkü (2025–2026) durumları 
 | İş/geliştirici kanalınız var, Xiaomi'den özel debug Mi Fitness alabildiniz | **Yöntem 1** (en temiz, resmi) |
 | Telefonunuzda **donanım yazılımı engeli yok** ve hızlı, resmi olmayan bir yol istiyorsunuz (en çok kullanılan) | **Yöntem 2 — 表盘自定义工具 + Shizuku** |
 | Shizuku kurmak istemiyorsunuz ve elinizde **小米穿戴 debug APK** var | **Yöntem 3** (en basit ama kaynağı gayri resmi) |
+| Açık kaynak bir araç denemek ve deneysel sonuçlara açık olmak istiyorsunuz | **Yöntem 4 — Gadgetbridge** (0.91.0+; **RW4'te doğrulanmadı**) |
 
 Pratik gerçek: bugün (2026 itibarıyla) toplulukta **en güvenilir ve herkesin erişebildiği yol
 Yöntem 2'dir**. Yöntem 1 resmi ama özel bir uygulama sürümü gerektirir ve bireysel
@@ -207,6 +209,43 @@ Adımlar:
 
 ---
 
+## Yöntem 4 — Gadgetbridge (açık kaynak, **deneysel**; RW4'te doğrulanmadı)
+
+Gadgetbridge (GB), Xiaomi hesabı/Mi Fitness gerektirmeyen açık kaynak bir Android yardımcı
+uygulamasıdır. **0.91.0 sürümünden (Mayıs 2026) itibaren** Xiaomi protobuf ailesindeki cihazlara
+`.rpk` yükleme/silme altyapısına sahiptir; ancak bu özellik **Mi Band 9 üzerinde test edilmiştir,
+Redmi Watch 4 üzerinde değil.**
+
+### Durum (dikkatle okuyun)
+
+- Kaynak kodda RW4 için `RedmiWatch4Coordinator` vardır ve cihaz durumu
+  **"Unknown support / Experimental"** olarak işaretlidir (`isExperimental() == true`).
+- Xiaomi protobuf ailesi için **"Flashing (watchface, firmware, rpk)"** ve
+  **"Watchface and app management"** özellikleri listelenir; `.rpk` için kod yolu vardır
+  (`XiaomiRpkService`, komut tipi 20: listele/kur/sil; `XiaomiFWHelper.parseAsRpk()`).
+- Özellik, PR #5864 (birleşme 2026‑03‑23) ile eklendi ve **Mi Band 9** üzerinde doğrulandı.
+  RW4 için açılan talep (Codeberg **#4925**) hâlâ **açıktır**; RW4'te başarılı bir `.rpk`
+  kurulum raporu (Codeberg/GitHub/Reddit/BandBBS/XDA) **bulunamadı**.
+- Eşleştirme, topluluk yöntemlerindekiyle **aynı Xiaomi AuthKey**'i gerektirir
+  (`pair_xiaomi`; Mi Fitness loglarındaki `encryptKey`).
+
+### Adımlar (denemek isterseniz)
+
+1. Telefona **Gadgetbridge ≥ 0.91.0** (tercihen en güncel sürüm) kurun.
+2. RW4'ü GB ile eşleştirin ve **Xiaomi AuthKey**'i girin (Mi Fitness loglarından çıkarılır;
+   bkz. GB belgeleri: <https://gadgetbridge.org/basics/pairing/huami-xiaomi-server/>).
+3. `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk` dosyasını GB ile açın
+   (`FwAppInstallerActivity`) veya GB içindeki **App Manager**'dan yükleyin.
+4. Sonucu Codeberg **#4925** (<https://codeberg.org/Freeyourgadget/Gadgetbridge/issues/4925>)
+   altında bildirin — RW4'te çalışıp çalışmadığı topluluk için yeni bilgidir.
+
+> **Beklenti yönetimi:** Çalışırsa pratik ve açık kaynak bir yol elde edersiniz. Çalışmazsa bu,
+> uygulamamızdaki bir hata **değil**, RW4'ün GB'deki "deneysel / destek bilinmiyor" statüsünün
+> sonucudur. Bu nedenle RW4 için **öncelikli yol** hâlâ Yöntem 2 (表盘自定义工具 + Shizuku) veya
+> Yöntem 3'tür.
+
+---
+
 ## Kurulumun başarılı olduğu nasıl doğrulanır?
 
 - **Yöntem 1:** Kurulum sonrası bir **Toast** bildirimi görünür.
@@ -327,3 +366,11 @@ Adımlar:
   sınırını tamamen aştığı.
 - **UNCONFIRMED:** Yöntem 3 (小米穿戴 debug 9.11.59) APK'sının kaynağı yalnızca QQ grubu/gayri
   resmi paylaşımdır ve güncel sürümlerde davranış değişmiş olabilir.
+- **Kısmen doğrulanmış (Yöntem 4):** Gadgetbridge'in Xiaomi protobuf ailesine `.rpk` yükleme
+  altyapısı resmî kaynak kod + CHANGELOG (0.91.0) ile doğrulanmıştır; ancak resmî test cihazı
+  **Mi Band 9**'dur (PR #5864). **Redmi Watch 4'te çalıştığına dair rapor YOKTUR** (Codeberg
+  #4925 açık). Kaynaklar:
+  <https://gadgetbridge.org/gadgets/wearables/xiaomi/> ·
+  <https://gadgetbridge.org/basics/topics/xiaomi-protobuf/> ·
+  <https://codeberg.org/Freeyourgadget/Gadgetbridge/pulls/5864> ·
+  <https://codeberg.org/Freeyourgadget/Gadgetbridge/issues/4925>
