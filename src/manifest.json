@@ -1,0 +1,46 @@
+{
+  "package": "com.hyperpostulate.rw4compass",
+  "name": "Pusula",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "minPlatformVersion": 1200,
+  "icon": "/common/logo.png",
+  "simulationVersion": "default",
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.geolocation"
+    },
+    {
+      "name": "system.sensor"
+    },
+    {
+      "name": "system.brightness"
+    }
+  ],
+  "permissions": [
+    {
+      "name": "hapjs.permission.LOCATION"
+    }
+  ],
+  "config": {
+    "logLevel": "log",
+    "designWidth": 390
+  },
+  "router": {
+    "entry": "pages/index",
+    "pages": {
+      "pages/index": {
+        "component": "index"
+      },
+      "pages/gps": {
+        "component": "gps"
+      }
+    }
+  }
+}
