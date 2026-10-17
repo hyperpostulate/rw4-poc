@@ -1,81 +1,54 @@
-# UI/UX Tasarım Spesifikasyonu: Pusula & GPS (Redmi Watch 4)
+# UI/UX Tasarım Spesifikasyonu: GPS Info (Redmi Watch 4)
 
-Bu belge, Redmi Watch 4 akıllı saat için geliştirilen Pusula ve GPS uygulamasının kesin tasarım kurallarını belirler. Yazılım ekibi tarafından herhangi bir tasarım kararı verilmeden doğrudan uygulanmalıdır.
+Bu belge, Redmi Watch 4 akıllı saat için geliştirilen GPS Info uygulamasının kesin tasarım kurallarını belirler. Uygulama, tek ekran üzerinden yüksek okunabilirlikte GNSS verilerini sunmayı amaçlar.
 
 ## 1. Genel Görsel Dil
 
 ### Tema ve Renk Paleti
-AMOLED enerji tasarrufu için tamamen siyah arka plan zorunludur.
+AMOLED enerji tasarrufu için tamamen siyah arka plan zorunludur. Kontrast, düşük ışıklı ortamlarda okunabilirliği artırmak için maksimize edilmiştir.
 
 | Kullanım Alanı | Değer (Hex) | Açıklama |
 | :--- | :--- | :--- |
 | **Arka Plan** | `#000000` | Saf Siyah (True Black) |
-| **Birincil Metin** | `#FFFFFF` | Beyaz - Ana veriler ve başlıklar |
-| **İkincil Metin** | `#BDBDBD` | Açık Gri - Etiketler ve yardımcı bilgiler |
-| **Vurgu (Kuzey)** | `#FF4D4D` | Parlak Kırmızı - Kuzey oku ve kritik uyarılar |
-| **Başarı/Sabitlendi** | `#00C853` | Canlı Yeşil - GPS Fix durumu |
-| **Uyarı/Arama** | `#FFD600` | Sarı - Konum aranıyor durumu |
-| **Hata** | `#CF6679` | Pastel Kırmızı - Sensör hatası / Desteklenmiyor |
+| **Birincil Metin** | `#FFFFFF` | Beyaz - Koordinat ve ana değerler |
+| **İkincil Metin** | `#BDBDBD` | Açık Gri - Veri etiketleri ve alt detaylar |
+| **Başarı/Sabitlendi** | `#00C853` | Canlı Yeşil - GPS Fix (Sinyal Güçlü) durumu |
+| **Uyarı/Arama** | `#FFD600` | Sarı - Uydu araması devam ediyor |
+| **Hata** | `#CF6679` | Pastel Kırmızı - Sistem hataları veya kapalı sensör |
+| **Vurgu/Logo** | `#FF4D4D` | Parlak Kırmızı - Uygulama ikonu detayı |
 
 ### Tipografi Ölçeği (Sistem Fontu)
-Font ailesi olarak cihazın sistem varsayılanı kullanılır.
+Sadelik ve netlik için sınırlı bir yazı tipi skalası kullanılır.
 
-- **Devasa Veri (Derece):** `64px` / Bold / Center
-- **Ana Başlık/Değer:** `20px` / Medium / Left/Right
+- **Ana Değer:** `20px` / Medium / Right
 - **Yardımcı Bilgi (Etiket):** `16px` / Regular / Left
-- **Rozet Metni:** `14px` / Medium / Center / Letter-spacing: `1px`
+- **Alt Satır Detayı (DMS):** `14px` / Regular / Right / Color: `#BDBDBD`
 
 ### Boşluk ve Yerleşim (Spacing)
-- **Güvenli Kenar Payı (Safe Margin):** `16px` (Köşe yuvarlatmaları nedeniyle tüm kenarlarda bırakılmalıdır).
-- **Satır Aralığı:** `12px` ile `18px` arası standart boşluklar.
+- **Güvenli Kenar Payı (Safe Margin):** `16px` (Tüm kenarlarda korunmalıdır).
+- **Satır Aralığı:** Sabit `12px` (Her veri bloğu arasında).
 
 ---
 
-## 2. Ekran 1: Pusula (Giriş Ekranı)
+## 2. Ekran: GPS (Veri Listesi)
 
-Bu ekran, kullanıcıyı karşılayan temel navigasyon merkezidir. Katmanlı yapı için `<stack>` bileşeni kullanılacaktır.
-
-### Yerleşim Yapısı (Alt'tan Üst'e)
-1. **Katman 1 (Kadran):** Merkezde dönen `dial.png` dosyası.
-2. **Katman 2 (İndeks):** En üst ortada sabit duran `index-marker.png`.
-3. **Katman 3 (Bilgi Paneli):** Alt bölgede dereceler ve durum bilgileri içeren şeffaf panel.
-
-### Detaylar
-- **Merkez Derece:** `64px` beyaz metin. Örn: `"247°"`
-- **Yön Kısaltması:** Derecenin hemen altında `20px` gri metin. Örn: `"GB"` (K, KD, D, GD, G, GB, B, KB).
-- **Kaynak Rozeti:** En altta küçük bir kapsül. 
-  - Manyeto aktifse: `bg: #333`, text: `"MANYETO"`, renk: Beyaz.
-  - GPS Fallback ise: `bg: #443300`, text: `"GPS YÖNÜ"`, renk: Sarı (`#FFD600`).
-  - Hata varsa: `bg: #442222`, text: `"SENSÖR HATASI"`, renk: Kırmızı.
-- **Hassasiyet Göstergesi:** İndeks marker'ın yanına veya altına konulan nokta:
-  - High (3): Yeşil | Med (2): Sarı | Low (1): Turuncu | Fail (-1): Kırmızı.
-
-### Dinamik Hareket
-- **Rotasyon:** Kadran `transform: rotate(Ndeg)` ile döndürülür.
-- **Geçiş:** `transition: transform 120ms linear`. Keskin sıçramaları önlemek adına doğrusal geçiş tercih edilmiştir.
-- **Mantık:** $359^\circ \to 0^\circ$ geçişlerinde görsele takılma olmaması için yazılımsal "angle wrapping" uygulanmalı, ancak CSS tarafında sadece hedef açıya odaklanılmalıdır.
-
----
-
-## 3. Ekran 2: GPS (Detay Ekranı)
-
-Canlı GNSS verilerinin sunulduğu liste tabanlı bilgi ekranıdır. Tüm elemanlar dikey bir `flex` yapısında sıralanır.
+GNSS verilerinin sunulduğu tek ekran yapısıdır. Elemanlar yukarıdan aşağıya doğru dikey bir liste halinde sıralanır.
 
 ### Veri Satırları (Yerleşim: Flex Row, Space-Between)
-Her satır; sol tarafta `16px Secondary Text` etiket ve sağ tarafta `20px Primary Text` değer şeklinde kurgulanır.
+Her satır; sol tarafta `16px Sekonder Metin` etiket ve sağ tarafta `20px Birincil Metin` değer şeklinde kurgulanır.
 
 | Alan | Format (Sağ Taraf) | Notlar |
 | :--- | :--- | :--- |
-| **Enlem** | `41.00823°` <br/> `41° 00' 29.6" K` | Alt satır daha küçük (`14px grey`) |
-| **Boylam** | `28.97839°` <br/> `28° 58' 42.2" D` | Alt satır daha küçük (`14px grey`) |
-| **İrtifa** | `152 m` | Deniz seviyesinden yükseklik |
-| **Hız** | `1.2 m/s (4.3 km/h)` | Birimler parantez içinde |
-| **Doğruluk** | `± 3.5 m` | Yatay hassasiyet değeri |
-| **Zaman** | `14:20:05` | Son güncelleme saati |
+| **Enlem** | `41.00823°` <br/> `41° 00' 29.6" K` | Alt satır DMS formatındadır (`14px grey`) |
+| **Boylam** | `28.97839°` <br/> `28° 58' 42.2" D` | Alt satır DMS formatındadır (`14px grey`) |
+| **İrtifa** | `152 m` | Deniz seviyesinden metre cinsinden yükseklik |
+| **Hız** | `1.2 m/s (4.3 km/h)` | Hem m/s hem km/h gösterimi yapılır |
+| **Doğruluk** | `± 3.5 m` | Mevcut konumun yatay hassasiyeti |
+| **Zaman** | `14:20:05` | Güncel UTC/Local zaman damgası |
 
-### Durum Çubuğu (Alt Bölüm)
-En alt satırda konum durumunu belirtir:
-- **Aranıyor:** Sarı metin, yanında yanıp sönen (opacity pulse) bir nokta. `"Konum Aranıyor..."`
+### Durum Çubuğu (Ekran Altı)
+Listenin en altında yer alan dinamik bilgi alanı:
+- **Aranıyor:** Sarı metin, yanında yanıp sönen nokta. `"Konum Aranıyor..."`
 - **Aktif (Fix):** Yeşil metin. `"Sinyal Güçlü"`
 - **Hatalar:** Kırmızı metin.
   - Kod 203: `"Desteklenmiyor"`
@@ -84,57 +57,37 @@ En alt satırda konum durumunu belirtir:
 
 ---
 
-## 4. Navigasyon ve Akış
+## 3. Durum Matrisi (Copy Guide)
 
-- **Kontrol:** Vertikal Swiper (`vertical=true`).
-- **Yön:** Yukarı kaydırma $\to$ GPS ekranı; Aşağı kaydırma $\to$ Pusula ekranı.
-- **Gösterge:** Sayfa altındaki nokta göstergeleri (dots) kapatılmıştır; temiz görüntü hedeflenmektedir.
+Uygulamanın çalışma anındaki farklı senaryolar için içerik rehberi:
 
----
-
-## 5. Durum Matrisi (Copy Guide)
-
-| Senaryo | Ekran 1 Metin | Ekran 2 Metin | Görsel Durum |
-| :--- | :--- | :--- | :--- |
-| **İlk Açılış** | `"Sensörler Hazırlanıyor..."` | `"Uydu Bağlantısı Kuruluyor..."` | Pulse Animasyon |
-| **Normal Çalışma** | `[Derece]°` | `[Koordinatlar]` | Standart Temiz Görünüm |
-| **Manyeto Yok** | `"GPS Yönü"` (Badge) | `[Veriler]` | Badge Rengi: Sarı |
-| **Tamamen Çevrimdışı** | `"SENSÖR DESTEKLENMİYOR"` | `"SİNYAL YOK (Kod: XXX)"` | Renk: Kırmızı |
+| Senaryo | Metin İçeriği | Görsel Durum |
+| :--- | :--- | :--- |
+| **İlk Açılış** | `"Uydu Bağlantısı Kuruluyor..."` | Sarı Dot / Pulse Animasyon |
+| **Normal Çalışma** | `[Güncel Koordinatlar ve Veriler]` | Yeşil Durum Metni / Statik Liste |
+| **Çevrimdışı** | `"SİNYAL YOK (Kod: XXX)"` | Kırmızı Durum Metni / Veri Alanları Boş |
 
 ---
 
-## 6. Varlık (Asset) Spesifikasyonları
+## 4. Varlık (Asset) Spesifikasyonları
 
-Tüm varlıklar PNG formatında, şeffaf arka planla üretilecektir.
-
-### `dial.png` (Ana Kadran)
-- **Boyut:** $360 \times 360\text{ px}$
-- **Merkez Noktası:** $(180, 180)$
-- **Ticks (Çentikler):**
-  - Major ($30^\circ$ ara): Uzun çizgi, Genişlik: $2\text{px}$, Boy: $15\text{px}$. Renk: `#FFFFFF`.
-  - Minor ($15^\circ$ ara): Kısa çizgi, Genişlik: $2\text{px}$, Boy: $8\text{px}$. Renk: `#BDBDBD`.
-- **Harfler (Cardinal Points):**
-  - **K** ($0^\circ$), **D** ($90^\circ$), **G** ($180^\circ$), **B** ($270^\circ$).
-  - Font size: $24\text{px}$, Weight: Bold, Color: `#FFFFFF`.
-- **Ara Yönler:** KD, GD, GB, KB. Daha küçük font ($16\text{px}$) ve hafif gri renkte.
-- **Kuzey İşareti:** "K" harfinin üzerinde veya merkezden dışa doğru uzanan ince bir kırmızı vurgu çizgisi (`#FF4D4D`).
-- **Alignment:** Resmin en üst orta noktası $0^\circ$ (Kuzey) olarak kabul edilir.
-
-### `index-marker.png` ( Sabit Gösterge)
-- **Boyut:** $40 \times 40\text{ px}$
-- **Şekil:** Aşağı bakan dar bir üçgen veya elmas formu.
-- **Renk:** `#FF4D4D` (Parlak Kırmızı).
-- **Pozisyon:** Ekranda kadranın üst kenarıyla hizalanmış şekilde sabitlenir.
+Sadece uygulama simgesine ait tanımlamalar mevcuttur.
 
 ### `logo.png` (App Icon)
-- **Boyut:** $192 \times 192\text{ px}$
-- **İçerik:** Siyah kare zemin üzerine minimalist beyaz pusula iğnesi; iğnenin uç kısmı parlak kırmızı.
+- **Boyut:** $192 \times 192\text{ px}$ (Opaque RGB)
+- **Zemin:** Siyah (`#000000`), köşeler $22\%$ oranında yuvarlatılmış kare.
+- **Simge Geometrisi:** 
+  - **Tip:** Modern Lokasyon Pini (Location Pin).
+  - **Renk:** Ana gövde Beyaz (`#FFFFFF`).
+  - **Yapı:** Ortalanmış dairesel başlık ve aşağıya doğru sivrilen kuyruk.
+  - **Detay:** Başlık merkezinde koyu gri (`#111111`) dairesel boşluk; boşluğun çevresinde çok ince kırmızı (`#FF4D4D`) vurgu halkası.
+- **Teknik:** Asset, $4\times$ süper örnekleme (supersampling) sonrası Lanczos filtresiyle küçültülmüştür.
 
 ---
 
-## 7. Uygulama Notları ve Stil Blokları
+## 5. Uygulama Notları ve Stil Blokları
 
-Taslak CSS sınıfları aşağıdadır. `stack` kullanımı kritik olduğundan, katmanlama bu mantığa göre yapılmalıdır.
+Arayüz geliştirmede baz alınacak stil taslakları:
 
 ```css
 /* Ana Konteyner */
@@ -147,13 +100,6 @@ Taslak CSS sınıfları aşağıdadır. `stack` kullanımı kritik olduğundan, 
   width: 390px;
   height: 450px;
   padding: 16px;
-}
-
-/* Dönüş Efekti */
-.rotating-dial {
-  width: 360px;
-  height: 360px;
-  transition: transform 120ms linear;
 }
 
 /* Veri Satırı Stili */
@@ -177,12 +123,33 @@ Taslak CSS sınıfları aşağıdadır. `stack` kullanımı kritik olduğundan, 
   text-align: right;
 }
 
-/* Durum Rozeti */
-.badge {
-  padding: 4px 8px;
-  border-radius: 10px;
+.sub-value {
+  color: #BDBDBD;
   font-size: 14px;
-  font-weight: medium;
-  letter-spacing: 1px;
+  text-align: right;
+}
+
+/* Durum Çubuğu ve Animasyon */
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pulse {
+  animation: opacityPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes opacityPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 ```

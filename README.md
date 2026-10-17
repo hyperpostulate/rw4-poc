@@ -1,10 +1,10 @@
-# Pusula — Compass & GPS for Redmi Watch 4
+# GPS Info — GPS Data for Redmi Watch 4
 
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
 
-A two-screen compass + GPS app for the Redmi Watch 4, built as a Xiaomi Vela JS app (quick app, `.rpk`). Screen 1 is a live compass with a rotating dial; screen 2 shows raw GNSS data (latitude, longitude, altitude, speed, accuracy, fix time). The UI is Turkish and the compass falls back gracefully when a sensor API is unavailable on the device.
+A single-screen app for the Redmi Watch 4 that shows raw GNSS data (latitude and longitude in decimal degrees plus DMS, altitude, speed, accuracy, fix time and signal status), built as a Xiaomi Vela JS app (quick app, `.rpk`). The UI is Turkish and the app degrades gracefully when the geolocation API is unavailable on the device.
 
 * * *
 
@@ -14,7 +14,7 @@ A two-screen compass + GPS app for the Redmi Watch 4, built as a Xiaomi Vela JS 
 - [Installation](#installation)
 - [Build & Run](#build--run)
 - [Project Structure](#project-structure)
-- [Screens & Features](#screens--features)
+- [Screen & Features](#screen--features)
 - [Installing on the Watch](#installing-on-the-watch)
 - [Documentation](#documentation)
 - [Known Limitations & Risks](#known-limitations--risks)
@@ -64,7 +64,7 @@ npm install
 npm run build
 ```
 
-The build produces `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`.
+The build produces `dist/com.hyperpostulate.gpsinfo.debug.1.0.0.rpk`.
 
 * * *
 
@@ -94,12 +94,10 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # default string bundle
 │   ├── common/
-│   │   ├── dial.png           # generated compass dial, 360x360
-│   │   ├── index-marker.png   # generated fixed index marker, 40x40
-│   │   └── logo.png           # generated app icon, 192x192
+│   │   └── logo.png           # generated app icon (location pin), 192x192
 │   └── pages/
 │       └── index/
-│           └── index.ux       # single page: vertical swiper (Pusula + GPS) + all logic
+│           └── index.ux       # single page: GPS data list + status row + all logic
 ├── scripts/
 │   └── gen_assets.py          # reproducible Pillow generator for the PNG assets
 ├── docs/
@@ -118,15 +116,15 @@ Purpose
 
 `src/manifest.json`
 
-Vela app manifest: `package` = `com.hyperpostulate.rw4compass`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1200`, `designWidth: 390`, declared features (`system.router`, `system.geolocation`, `system.sensor`, `system.brightness`) and the `LOCATION` permission
+Vela app manifest: `package` = `com.hyperpostulate.gpsinfo`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1200`, `designWidth: 390`, declared features (`system.router`, `system.geolocation`, `system.brightness`) and the `LOCATION` permission
 
 `src/pages/index/index.ux`
 
-The whole app: template (two swiper pages), script (sensor/GPS logic, fallback chain, formatting helpers) and styles
+The whole app: template (GPS data list + status row), script (geolocation logic, formatting helpers) and styles
 
 `scripts/gen_assets.py`
 
-Generates `dial.png`, `index-marker.png` and `logo.png` deterministically; re-reads every file it writes and asserts dimensions and non-blank content
+Generates `logo.png` deterministically; re-reads every file it writes and asserts dimensions and non-blank content
 
 `docs/design.md`
 
@@ -134,29 +132,15 @@ The authoritative UI/UX spec (palette, typography, layout, states, copy)
 
 * * *
 
-## Screens & Features
+## Screen & Features
 
-Navigation is a **vertical swipe** between the two screens (`swiper` with `vertical="true"`, indicator dots off). Data subscriptions start on page show and stop on page hide to save battery; the compass sensor subscription is also stopped while the GPS screen is visible.
+The app has a **single screen**. Data subscriptions start on page show and stop on page hide to save battery.
 
-### Screen 1 — Compass ("Pusula")
-
-- A rotating `dial.png` (North marked with a red accent line) with a fixed index marker at the top and the heading readout in the dial's empty center.
-- Large degree readout (`247°`) plus the Turkish cardinal abbreviation (`K`, `KD`, `D`, `GD`, `G`, `GB`, `B`, `KB`).
-- Source badge: `MANYETO` (magnetometer), `GPS YÖNÜ` (GPS fallback), or `SENSÖR DESTEKLENMİYOR`.
-- Accuracy dot for the compass sensor (high / medium / low / disconnected / unknown).
-- Software angle wrapping so `359° → 0°` takes the short path, with a `120ms linear` CSS transition on the dial only (readout and marker never rotate).
-
-### Screen 2 — GPS
+### Screen — GPS
 
 - Latitude and longitude in decimal degrees plus a smaller DMS line (`41° 00' 29.6" K`).
 - Altitude (metres, GNSS-derived - the Redmi Watch 4 has no barometer), speed (`m/s` and `km/h`), horizontal accuracy, and the last fix time.
 - A status row: searching (pulsing yellow), fix acquired (green "Sinyal Güçlü"), or a mapped error (203 → "Desteklenmiyor", 204 → "Zaman Aşımı", 1000+ → "Konum Kapalı").
-
-### Heading Fallback Chain
-
-1. **Magnetometer** — `@system.sensor.subscribeCompass`; direction in radians is converted to degrees.
-2. **GPS course-over-ground** — when the compass is unavailable, the bearing between consecutive fixes is used, but only while moving (speed ≥ 0.5 m/s and ≥ 3 m between fixes). The badge shows `GPS YÖNÜ`.
-3. **Explicit unavailable state** — if neither source works, the app shows `SENSÖR DESTEKLENMİYOR` instead of guessing.
 
 Every API call is wrapped in `try/catch` and guarded by capability flags, so a missing or failing API is never retried in a loop.
 
@@ -166,7 +150,7 @@ Every API call is wrapped in `try/catch` and guarded by capability flags, so a m
 
 The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** app (Google Play listing "Notify for Xiaomi/Mi Band 8-10", package `com.mc.xiaomi1`, by OneZeroBit). The Redmi Watch 4 is on the app's official compatibility list, and the app's official site documents installing custom VelaJS (`.rpk`) apps this way.
 
-> **Verification status:** this route is documented by the official Notify guides, but it has **not yet been tested with Pusula on a real Redmi Watch 4**.
+> **Verification status:** this route is documented by the official Notify guides, but it has **not yet been tested with GPS Info on a real Redmi Watch 4**.
 
 ### Prerequisites
 
@@ -177,19 +161,19 @@ The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify
 
 ### Steps
 
-1. Build the package: `npm run build` → `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`.
+1. Build the package: `npm run build` → `dist/com.hyperpostulate.gpsinfo.debug.1.0.0.rpk`.
 2. Open **Notify for Xiaomi**.
 3. Go to **Device**.
 4. Select **Third party app**.
-5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`).
+5. Select the `.rpk` file (`dist/com.hyperpostulate.gpsinfo.debug.1.0.0.rpk`).
 6. Keep the watch near the phone and follow the guided steps.
-7. When the installation finishes, **Pusula** appears in the watch's app list.
+7. When the installation finishes, **GPS Info** appears in the watch's app list.
 
 ### Notes
 
-- The debug-signed `.rpk` produced by `npm run build` is fine for this app: Vela only checks the certificate for watch↔phone Interconnect communication, which Pusula does not use.
+- The debug-signed `.rpk` produced by `npm run build` is fine for this app: Vela only checks the certificate for watch↔phone Interconnect communication, which GPS Info does not use.
 - Redmi Watch 4 limits: at most ~20 quick apps installed, and ~87 MB of free space is required for quick-app installs.
-- To update, build a new `.rpk` and install it over the same package name (`com.hyperpostulate.rw4compass`).
+- To update, build a new `.rpk` and install it over the same package name (`com.hyperpostulate.gpsinfo`).
 - Unverified details: the app version that introduced `.rpk` installs, and whether the feature requires the (about €3, one-time) PRO purchase, are not officially documented. The menu labels above are the English ones; the app itself is localized, but the Turkish labels were not verified.
 
 Sources: [Notify for Xiaomi VelaJS install guide](https://mibandnotify.com/xiaomi-mi-band/notify-xms-app-instructions.php) · [Google Play listing](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)
@@ -204,16 +188,14 @@ Contents
 
 [docs/design.md](docs/design.md)
 
-UI/UX specification: palette, typography scale, layout, states, Turkish copy, asset geometry
+UI/UX specification: palette, typography scale, layout, states, Turkish copy, asset geometry (GPS-only)
 
 * * *
 
 ## Known Limitations & Risks
 
-- **API availability on the Redmi Watch 4 is unverified.** The official Vela support tables mark `@system.geolocation` and `@system.sensor` (compass) as *not supported* on the Redmi Watch 4, even though the watch hardware has GNSS and a magnetometer (the stock compass app works). No public community report confirms or denies it; the app is built to degrade gracefully and the answer only comes from a real-device test.
+- **Geolocation API availability on the Redmi Watch 4 is unverified.** The official Vela support tables mark @system.geolocation as *not supported* on the Redmi Watch 4, even though the watch hardware has GNSS (the stock apps use it). No public community report confirms or denies it; the app is built to degrade gracefully and the answer only comes from a real-device test.
 - **Altitude is GNSS-derived** — the Redmi Watch 4 has no barometer, so altitude accuracy is inherently limited.
-- **Compass dial labels rotate with the dial**, as on a physical compass dial (a deliberate design choice).
-- **Vela specifics:** the framework has no `swiper-item` component (direct `div` children are used instead), layers are stacked with `position: absolute`, and `letter-spacing` is not in the supported style list, so it is omitted on the badge.
 - **`npm audit` reports vulnerabilities in transitive dev dependencies** of `aiot-toolkit`. They are build-time only and do not ship inside the `.rpk`.
 
 * * *
@@ -227,10 +209,8 @@ python3 scripts/gen_assets.py        # regenerates and self-checks the PNG asset
 
 On-device checklist (the only way to resolve the API questions above):
 
-1. Which badge does the compass screen show - `MANYETO`, `GPS YÖNÜ` or `SENSÖR DESTEKLENMİYOR`?
-2. Does the letter under the index marker match the degree reading while turning the watch (e.g. `D` near 90°)?
-3. Does the GPS screen show coordinates, and is the status `Sinyal Güçlü` or an error code?
-4. Does the vertical swipe work, and does the screen stay awake while the app is open?
+1. Does the GPS screen show coordinates, and is the status `Sinyal Güçlü` or an error code?
+2. Does the screen stay awake while the app is open?
 
 * * *
 
@@ -259,13 +239,13 @@ No license file is currently included in this repository. Until one is added, al
 
 * * *
 
-## Pusula — Redmi Watch 4 için Pusula ve GPS
+## GPS Info — Redmi Watch 4 için GPS Verileri
 
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
 
-Redmi Watch 4 için iki ekranlı pusula + GPS uygulaması; Xiaomi Vela JS uygulaması (hızlı uygulama, `.rpk`) olarak geliştirilmiştir. Birinci ekran dönen kadranlı canlı bir pusuladır; ikinci ekran GNSS verilerini (enlem, boylam, irtifa, hız, doğruluk, düzeltme zamanı) gösterir. Arayüz Türkçedir ve cihazda bir sensör API'si yoksa pusula zarif biçimde düşer.
+Redmi Watch 4 için ham GNSS verilerini (enlem ve boylam ondalık derece ve DMS olarak, irtifa, hız, doğruluk, düzeltme zamanı ve sinyal durumu) gösteren tek ekranlı bir uygulama; Xiaomi Vela JS uygulaması (hızlı uygulama, `.rpk`) olarak geliştirilmiştir. Arayüz Türkçedir ve cihazda geolocation API'si yoksa uygulama zarif biçimde düşer.
 
 * * *
 
@@ -275,7 +255,7 @@ Redmi Watch 4 için iki ekranlı pusula + GPS uygulaması; Xiaomi Vela JS uygula
 - [Kurulum](#kurulum)
 - [Derleme ve Çalıştırma](#derleme-ve-çalıştırma)
 - [Proje Yapısı](#proje-yapısı)
-- [Ekranlar ve Özellikler](#ekranlar-ve-özellikler)
+- [Ekran ve Özellikler](#ekran-ve-özellikler)
 - [Saate Kurulum](#saate-kurulum)
 - [Belgeler](#belgeler)
 - [Bilinen Sınırlamalar ve Riskler](#bilinen-sınırlamalar-ve-riskler)
@@ -325,7 +305,7 @@ npm install
 npm run build
 ```
 
-Derleme `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk` dosyasını üretir.
+Derleme `dist/com.hyperpostulate.gpsinfo.debug.1.0.0.rpk` dosyasını üretir.
 
 * * *
 
@@ -355,12 +335,10 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # varsayılan metin paketi
 │   ├── common/
-│   │   ├── dial.png           # üretilen pusula kadranı, 360x360
-│   │   ├── index-marker.png   # üretilen sabit indeks işaretçisi, 40x40
-│   │   └── logo.png           # üretilen uygulama ikonu, 192x192
+│   │   └── logo.png           # üretilen uygulama ikonu (konum pini), 192x192
 │   └── pages/
 │       └── index/
-│           └── index.ux       # tek sayfa: dikey swiper (Pusula + GPS) + tüm mantık
+│           └── index.ux       # tek sayfa: GPS veri listesi + durum satırı + tüm mantık
 ├── scripts/
 │   └── gen_assets.py          # PNG varlıkları için tekrarlanabilir Pillow üreteci
 ├── docs/
@@ -379,15 +357,15 @@ Amaç
 
 `src/manifest.json`
 
-Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4compass`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1200`, `designWidth: 390`, tanımlı feature'lar (`system.router`, `system.geolocation`, `system.sensor`, `system.brightness`) ve `LOCATION` izni
+Vela uygulama manifesti: `package` = `com.hyperpostulate.gpsinfo`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1200`, `designWidth: 390`, tanımlı feature'lar (`system.router`, `system.geolocation`, `system.brightness`) ve `LOCATION` izni
 
 `src/pages/index/index.ux`
 
-Uygulamanın tamamı: şablon (iki swiper sayfası), script (sensör/GPS mantığı, düşüş zinciri, biçimlendirme yardımcıları) ve stiller
+Uygulamanın tamamı: şablon (GPS veri listesi + durum satırı), script (geolocation mantığı, biçimlendirme yardımcıları) ve stiller
 
 `scripts/gen_assets.py`
 
-`dial.png`, `index-marker.png` ve `logo.png` dosyalarını belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyut ve boş olmama kontrolünü yapar
+`logo.png` dosyasını belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyut ve boş olmama kontrolünü yapar
 
 `docs/design.md`
 
@@ -395,29 +373,15 @@ Yetkili UI/UX spesifikasyonu (palet, tipografi, yerleşim, durumlar, metinler)
 
 * * *
 
-## Ekranlar ve Özellikler
+## Ekran ve Özellikler
 
-Ekranlar arası geçiş **dikey kaydırmadır** (`vertical="true"` swiper, nokta göstergesi kapalı). Veri abonelikleri sayfa gösterildiğinde başlar, gizlendiğinde durur (pil tasarrufu); GPS ekranı görünürken pusula sensörü aboneliği de durdurulur.
+Uygulamanın **tek ekranı** vardır. Veri abonelikleri sayfa gösterildiğinde başlar, gizlendiğinde durur (pil tasarrufu).
 
-### Ekran 1 — Pusula
-
-- Dönen `dial.png` (kuzey, kırmızı vurgu çizgisiyle işaretli), üstte sabit indeks işaretçisi ve kadranın boş merkezinde yön okuması.
-- Büyük derece okuması (`247°`) ve Türkçe ana yön kısaltması (`K`, `KD`, `D`, `GD`, `G`, `GB`, `B`, `KB`).
-- Kaynak rozeti: `MANYETO` (manyetometre), `GPS YÖNÜ` (GPS yedeği) veya `SENSÖR DESTEKLENMİYOR`.
-- Pusula sensörü için hassasiyet noktası (yüksek / orta / düşük / bağlantı kesik / bilinmiyor).
-- Yazılımsal açı sarma ile `359° → 0°` geçişi kısa yolu izler; kadrana özel `120ms linear` CSS geçişi kullanılır (okuma ve işaretçi asla dönmez).
-
-### Ekran 2 — GPS
+### Ekran — GPS
 
 - Enlem ve boylam, ondalık derece olarak; altında daha küçük DMS satırı (`41° 00' 29.6" K`).
 - İrtifa (metre, GNSS kaynaklı - Redmi Watch 4'te barometre yoktur), hız (`m/s` ve `km/h`), yatay doğruluk ve son düzeltme zamanı.
 - Durum satırı: aranıyor (sarı, nabız animasyonlu), sinyal var (yeşil "Sinyal Güçlü") veya eşlenmiş hata (203 → "Desteklenmiyor", 204 → "Zaman Aşımı", 1000+ → "Konum Kapalı").
-
-### Yön Düşüş Zinciri
-
-1. **Manyetometre** — `@system.sensor.subscribeCompass`; radyan cinsinden yön dereceye çevrilir.
-2. **GPS hareket yönü** — pusula yoksa ardışık düzeltmeler arası kerteriz kullanılır; yalnızca hareket halinde (hız ≥ 0.5 m/s ve düzeltmeler arası ≥ 3 m). Rozet `GPS YÖNÜ` gösterir.
-3. **Açık "desteklenmiyor" durumu** — iki kaynak da çalışmazsa uygulama tahmin yürütmek yerine `SENSÖR DESTEKLENMİYOR` gösterir.
 
 Her API çağrısı `try/catch` ile sarılır ve yetenek bayraklarıyla korunur; böylece eksik/başarısız bir API asla döngü içinde tekrar denenmez.
 
@@ -427,7 +391,7 @@ Her API çağrısı `try/catch` ile sarılır ve yetenek bayraklarıyla korunur;
 
 `.rpk` dosyası, Android telefonda yüklü **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** uygulaması (Google Play adı "Notify for Xiaomi/Mi Band 8-10", paket `com.mc.xiaomi1`, geliştirici OneZeroBit) ile Bluetooth üzerinden saate kurulur. Redmi Watch 4, uygulamanın resmî uyumluluk listesinde yer alır; uygulamanın resmî sitesi özel VelaJS (`.rpk`) uygulamalarının bu yolla kurulmasını belgeler.
 
-> **Doğrulama durumu:** bu yol Notify'in resmî kılavuzlarınca belgelenmiştir; ancak Pusula ile gerçek bir Redmi Watch 4 üzerinde **henüz test edilmemiştir**.
+> **Doğrulama durumu:** bu yol Notify'in resmî kılavuzlarınca belgelenmiştir; ancak GPS Info ile gerçek bir Redmi Watch 4 üzerinde **henüz test edilmemiştir**.
 
 ### Ön koşullar
 
@@ -438,19 +402,19 @@ Her API çağrısı `try/catch` ile sarılır ve yetenek bayraklarıyla korunur;
 
 ### Adımlar
 
-1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`.
+1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.gpsinfo.debug.1.0.0.rpk`.
 2. **Notify for Xiaomi**'i açın.
 3. **Device** bölümüne gidin.
 4. **Third party app** seçeneğini seçin.
-5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`) seçin.
+5. `.rpk` dosyasını (`dist/com.hyperpostulate.gpsinfo.debug.1.0.0.rpk`) seçin.
 6. Saati telefonun yakınında tutun ve yönlendirmeli adımları izleyin.
-7. Kurulum bitince **Pusula** saatin uygulama listesinde görünür.
+7. Kurulum bitince **GPS Info** saatin uygulama listesinde görünür.
 
 ### Notlar
 
-- `npm run build` ile üretilen debug imzalı `.rpk` bu uygulama için yeterlidir: Vela sertifikayı yalnızca saat↔telefon Interconnect iletişiminde denetler; Pusula Interconnect kullanmaz.
+- `npm run build` ile üretilen debug imzalı `.rpk` bu uygulama için yeterlidir: Vela sertifikayı yalnızca saat↔telefon Interconnect iletişiminde denetler; GPS Info Interconnect kullanmaz.
 - Redmi Watch 4 sınırları: en fazla ~20 hızlı uygulama kurulabilir ve kurulum için ~87 MB boş alan gerekir.
-- Güncelleme için yeni bir `.rpk` derleyip aynı paket adının (`com.hyperpostulate.rw4compass`) üzerine kurun.
+- Güncelleme için yeni bir `.rpk` derleyip aynı paket adının (`com.hyperpostulate.gpsinfo`) üzerine kurun.
 - Doğrulanmayan ayrıntılar: `.rpk` kurulumunu ekleyen uygulama sürümü ve özelliğin (yaklaşık 3 €, tek seferlik) PRO satın alımı gerektirip gerektirmediği resmî olarak belgelenmemiştir. Yukarıdaki menü etiketleri İngilizcedir; uygulama Türkçeleştirilmiştir ama Türkçe etiketler doğrulanamamıştır.
 
 Kaynaklar: [Notify for Xiaomi VelaJS kurulum kılavuzu](https://mibandnotify.com/xiaomi-mi-band/notify-xms-app-instructions.php) · [Google Play sayfası](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)
@@ -465,16 +429,14 @@ Belge
 
 [docs/design.md](docs/design.md)
 
-UI/UX spesifikasyonu: palet, tipografi ölçeği, yerleşim, durumlar, Türkçe metinler, varlık geometrisi
+UI/UX spesifikasyonu: palet, tipografi ölçeği, yerleşim, durumlar, Türkçe metinler, varlık geometrisi (yalnız GPS)
 
 * * *
 
 ## Bilinen Sınırlamalar ve Riskler
 
-- **Redmi Watch 4'te API kullanılabilirliği doğrulanmamıştır.** Resmî Vela destek tabloları `@system.geolocation` ve `@system.sensor` (pusula) API'lerini Redmi Watch 4'te *desteklenmiyor* olarak işaretler; oysa saat donanımında GNSS ve manyetometre vardır (stok pusula uygulaması çalışır). Bunu doğrulayan ya da çürüten bir topluluk raporu yoktur; uygulama zarif düşecek şekilde yazılmıştır ve kesin cevap ancak gerçek cihaz testiyle çıkar.
+- **Redmi Watch 4'te geolocation API kullanılabilirliği doğrulanmamıştır.** Resmî Vela destek tabloları @system.geolocation API'sini Redmi Watch 4'te *desteklenmiyor* olarak işaretler; oysa saat donanımında GNSS vardır (stok uygulamalar onu kullanır). Bunu doğrulayan ya da çürüten bir topluluk raporu yoktur; uygulama zarif düşecek şekilde yazılmıştır ve kesin cevap ancak gerçek cihaz testiyle çıkar.
 - **İrtifa GNSS kaynaklıdır** — Redmi Watch 4'te barometre yoktur, dolayısıyla irtifa doğruluğu doğası gereği sınırlıdır.
-- **Kadran harfleri kadranla birlikte döner**, tıpkı fiziksel bir pusula kadranında olduğu gibi (bilinçli bir tasarım kararı).
-- **Vela'ya özgü ayrıntılar:** çerçevede `swiper-item` bileşeni yoktur (doğrudan `div` çocukları kullanılır), katmanlar `position: absolute` ile üst üste bindirilir ve `letter-spacing` desteklenen stil listesinde olmadığı için rozette kullanılmaz.
 - **`npm audit`**, `aiot-toolkit`'in geçişli geliştirme bağımlılıklarında güvenlik açıkları bildirir. Bunlar yalnızca derleme zamanıyla ilgilidir ve `.rpk` paketine dâhil olmaz.
 
 * * *
@@ -488,10 +450,8 @@ python3 scripts/gen_assets.py        # PNG varlıklarını yeniden üretip kendi
 
 Cihaz üstü kontrol listesi (yukarıdaki API sorularını çözmenin tek yolu):
 
-1. Pusula ekranı hangi rozeti gösteriyor - `MANYETO`, `GPS YÖNÜ` yoksa `SENSÖR DESTEKLENMİYOR`?
-2. Saati çevirirken indeks işaretçisinin altındaki harf, derece okumasıyla uyuşuyor mu (ör. 90° civarında `D`)?
-3. GPS ekranı koordinatları gösteriyor mu; durum `Sinyal Güçlü` mü yoksa bir hata kodu mu?
-4. Dikey kaydırma çalışıyor mu ve uygulama açıkken ekran açık kalıyor mu?
+1. GPS ekranı koordinatları gösteriyor mu; durum `Sinyal Güçlü` mü yoksa bir hata kodu mu?
+2. Uygulama açıkken ekran açık kalıyor mu?
 
 * * *
 
