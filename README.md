@@ -129,7 +129,7 @@ The toolchain is `aiot-toolkit` (`aiot build` / `aiot release` / `aiot start`). 
 ```
 redmi-watch4-compass/
 ├── src/
-│   ├── manifest.json          # package com.hyperpostulate.rw4poc, name "Redmi Watch 4 PoC", designWidth 390
+│   ├── manifest.json          # package com.hyperpostulate.rw4poc, name "RW4 - PoC", designWidth 390
 │   ├── app.ux                 # app entry (onCreate/onDestroy)
 │   ├── i18n/
 │   │   └── defaults.json      # default string bundle
@@ -159,7 +159,7 @@ Purpose
 
 `src/manifest.json`
 
-Vela app manifest: `package` = `com.hyperpostulate.rw4poc`, `name` = `Redmi Watch 4 PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the PoC uses no other system API)
+Vela app manifest: `package` = `com.hyperpostulate.rw4poc`, `name` = `RW4 - PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the PoC uses no other system API)
 
 `src/pages/index/index.ux`
 
@@ -209,7 +209,7 @@ The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify
 4. Select **Third party app**.
 5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`).
 6. Keep the watch near the phone and follow the guided steps.
-7. When the installation finishes, **Redmi Watch 4 PoC** appears in the watch's app list.
+7. When the installation finishes, **RW4 - PoC** appears in the watch's app list.
 
 ### Notes
 
@@ -414,7 +414,7 @@ Araç zinciri `aiot-toolkit`'tir (`aiot build` / `aiot release` / `aiot start`).
 ```
 redmi-watch4-compass/
 ├── src/
-│   ├── manifest.json          # paket com.hyperpostulate.rw4poc, ad "Redmi Watch 4 PoC", designWidth 390
+│   ├── manifest.json          # paket com.hyperpostulate.rw4poc, ad "RW4 - PoC", designWidth 390
 │   ├── app.ux                 # uygulama girişi (onCreate/onDestroy)
 │   ├── i18n/
 │   │   └── defaults.json      # varsayılan metin paketi
@@ -444,7 +444,7 @@ Amaç
 
 `src/manifest.json`
 
-Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4poc`, `name` = `Redmi Watch 4 PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (PoC başka sistem API'si kullanmaz)
+Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4poc`, `name` = `RW4 - PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (PoC başka sistem API'si kullanmaz)
 
 `src/pages/index/index.ux`
 
@@ -494,7 +494,7 @@ Hiçbir izin istenmez: JS saati hiçbir izin gerektirmez.
 4. **Third party app** seçeneğini seçin.
 5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`) seçin.
 6. Saati telefonun yakınında tutun ve yönlendirmeli adımları izleyin.
-7. Kurulum bitince **Redmi Watch 4 PoC** saatin uygulama listesinde görünür.
+7. Kurulum bitince **RW4 - PoC** saatin uygulama listesinde görünür.
 
 ### Notlar
 

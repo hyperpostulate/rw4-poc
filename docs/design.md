@@ -30,7 +30,7 @@ Hiyerarşi renkle değil, görsel boyutuyla sağlanır.
 
 ### Boşluk ve Yerleşim (Spacing)
 - **Sol kenar payı:** `16px` (`.app` padding-left).
-- **Üst kenar payı:** `14px`.
+- **Üst kenar payı:** `44px` (yuvarlak ekran köşesinden kaçınmak için başlık bir satır aşağıda).
 - **Başlık altı boşluk:** `18px`.
 - **Satır aralığı:** `16px` (her `.row` margin-bottom).
 
@@ -77,7 +77,7 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 `src/pages/index/index.ux` içinde kullanılan stiller. Vela'da `display` ve `gap` yoktur; yerleşim `flex-direction` ve `margin` ile kurulur.
 
 ```css
-.app { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding-left: 16px; padding-top: 14px; background-color: #000000; }
+.app { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding-left: 16px; padding-top: 44px; background-color: #000000; }
 .title { width: 310px; height: 42px; margin-left: 4px; margin-bottom: 18px; }
 .row { width: 360px; flex-direction: column; align-items: flex-start; justify-content: flex-start; margin-bottom: 16px; }
 .lbl { width: 150px; height: 25px; margin-left: 4px; }

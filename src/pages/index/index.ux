@@ -105,7 +105,7 @@ export default {
   align-items: flex-start;
   justify-content: flex-start;
   padding-left: 16px;
-  padding-top: 14px;
+  padding-top: 44px;
   background-color: #000000;
 }
 
