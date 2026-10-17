@@ -116,32 +116,35 @@ def make_logo():
     img = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    margin = int(N * 0.02)
-    radius = int(N * 0.22)
-    d.rounded_rectangle([margin, margin, N - margin, N - margin],
-                        radius=radius, fill=BLACK)
-
     cx = N / 2.0
-    body_w = N * 0.50
-    body_h = N * 0.62
-    d.rounded_rectangle([cx - body_w / 2, (N - body_h) / 2,
-                         cx + body_w / 2, (N + body_h) / 2],
-                        radius=N * 0.16, fill=WHITE)
+    cy = N / 2.0
 
-    strap_w = N * 0.20
-    strap_h = N * 0.10
-    d.rounded_rectangle([cx - strap_w / 2, margin + N * 0.03,
-                         cx + strap_w / 2, margin + N * 0.03 + strap_h],
+    # Full-bleed black disc so the launcher icon reads as a perfect circle.
+    d.ellipse([0, 0, N - 1, N - 1], fill=BLACK)
+
+    # Watch body, centred on the disc.
+    body_w = N * 0.44
+    body_h = N * 0.56
+    d.rounded_rectangle([cx - body_w / 2, cy - body_h / 2,
+                         cx + body_w / 2, cy + body_h / 2],
+                        radius=N * 0.14, fill=WHITE)
+
+    # Strap stubs, symmetric about the centre.
+    strap_w = N * 0.18
+    strap_h = N * 0.09
+    d.rounded_rectangle([cx - strap_w / 2, N * 0.06,
+                         cx + strap_w / 2, N * 0.06 + strap_h],
                         radius=strap_h / 2, fill=WHITE)
-    d.rounded_rectangle([cx - strap_w / 2, N - margin - N * 0.03 - strap_h,
-                         cx + strap_w / 2, N - margin - N * 0.03],
+    d.rounded_rectangle([cx - strap_w / 2, N * 0.94 - strap_h,
+                         cx + strap_w / 2, N * 0.94],
                         radius=strap_h / 2, fill=WHITE)
 
-    screen_w = body_w * 0.68
-    screen_h = body_h * 0.62
-    d.rounded_rectangle([cx - screen_w / 2, (N - screen_h) / 2,
-                         cx + screen_w / 2, (N + screen_h) / 2],
-                        radius=N * 0.05, fill=GREEN)
+    # Green screen, centred on the body.
+    screen_w = body_w * 0.70
+    screen_h = body_h * 0.60
+    d.rounded_rectangle([cx - screen_w / 2, cy - screen_h / 2,
+                         cx + screen_w / 2, cy + screen_h / 2],
+                        radius=N * 0.045, fill=GREEN)
 
     out = img.resize((S, S), Image.LANCZOS)
     path = os.path.join(OUT_DIR, "logo.png")
