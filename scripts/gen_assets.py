@@ -105,16 +105,28 @@ def make_glyph(ch):
 
 
 def make_logo():
-    """The Vela manifest requires an `icon`, but the Redmi Watch 4 launcher
-    does not render our artwork the way we intend. Ship a fully transparent
-    192x192 PNG so the launcher draws no custom tile at all."""
+    """Launcher icon: nothing but a single green disc.
+
+    The Redmi Watch 4 launcher reserves a fixed slot to the left of the app
+    name, so the slot must hold *visible* content -- an empty/transparent icon
+    leaves a gap that pushes the label to the middle of the row. Keep it as
+    simple as possible: one green (brand) circle on a transparent ground."""
     size = (192, 192)
+    n = size[0] * SS
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([0, 0, n - 1, n - 1], fill=GREEN)
+    img = img.resize(size, Image.LANCZOS)
+
     path = os.path.join(OUT_DIR, "logo.png")
-    Image.new("RGBA", size, (0, 0, 0, 0)).save(path)
+    img.save(path)
     chk = Image.open(path)
     chk.load()
     assert chk.size == size
-    assert chk.getbbox() is None, "logo must be fully transparent"
+    assert chk.getbbox() is not None, "logo must not be empty"
+    # centre pixel is opaque green, corners stay transparent
+    assert chk.getpixel((size[0] // 2, size[1] // 2))[3] > 200
+    assert chk.getpixel((0, 0))[3] < 20
 
 
 def main():
@@ -124,7 +136,7 @@ def main():
         make_text_image("lbl_" + stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
     for ch in CHARS:
         make_glyph(ch)
-    print("generated transparent logo + title + %d labels + %d glyphs"
+    print("generated green-disc logo + title + %d labels + %d glyphs"
           % (len(LABELS), len(CHARS)))
 
 

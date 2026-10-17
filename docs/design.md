@@ -55,8 +55,8 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 ## 3. Varlık (Asset) Spesifikasyonları
 
 ### `logo.png` (App Icon)
-- **Boyut:** 192×192 px, **tamamen şeffaf**.
-- Manifest `icon` alanını zorunlu tutar; ancak Redmi Watch 4 başlatıcısı bizim çizimimizi istendiği gibi göstermediği için (siyah zeminde beyaz/yeşil dikdörtgen olarak ve kaymış görünüyordu) **hiçbir simge çizilmeyen** şeffaf bir PNG paketlenir. Böylece başlatıcı özel bir kutu göstermez.
+- **Boyut:** 192×192 px, şeffaf zemin üzerine **tek bir yeşil daire** (`#00C853`).
+- Başlatıcı, uygulama adının solunda simge alanını her durumda rezerve eder; bu alan **boş/şeffaf** kalırsa isim satırın ortasına kayar. Bu yüzden alanı görünür bir içerikle (sade yeşil daire) dolduruyoruz. Simge konumu/ismi manifestten değiştirilemez.
 
 ### `txt/title.png`, `txt/lbl_*.png`
 - Yeşil (`#00C853`) metin, şeffaf zemin, 4× süper örnekleme.
