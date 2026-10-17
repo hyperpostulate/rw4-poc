@@ -134,7 +134,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # default string bundle
 │   ├── common/
-│   │   ├── logo.png           # launcher icon: a single green disc, 192x192
+│   │   ├── logo.png           # launcher icon: watch motif (white body, green screen), 192x192
 │   │   └── txt/               # generated PNG text: labels, title and the glyph atlas (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -167,7 +167,7 @@ The whole app: template (title + four label/value rows), script (clock formattin
 
 `scripts/gen_assets.py`
 
-Generates the title, the labels, the glyph atlas and the launcher icon (a single green disc) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images)
+Generates the title, the labels, the glyph atlas and the launcher icon (a watch motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images)
 
 `docs/design.md`
 
@@ -419,7 +419,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # varsayılan metin paketi
 │   ├── common/
-│   │   ├── logo.png           # başlatıcı simgesi: tek bir yeşil daire, 192x192
+│   │   ├── logo.png           # başlatıcı simgesi: saat motifi (beyaz gövde, yeşil ekran), 192x192
 │   │   └── txt/               # üretilen PNG metinler: etiketler, başlık ve glif atlası (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -452,7 +452,7 @@ Uygulamanın tamamı: şablon (başlık + dört etiket/değer satırı), script 
 
 `scripts/gen_assets.py`
 
-Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (tek bir yeşil daire) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular
+Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (saat motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular
 
 `docs/design.md`
 

@@ -55,8 +55,10 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 ## 3. Varlık (Asset) Spesifikasyonları
 
 ### `logo.png` (App Icon)
-- **Boyut:** 192×192 px, şeffaf zemin üzerine **tek bir yeşil daire** (`#00C853`).
-- Başlatıcı, uygulama adının solunda simge alanını her durumda rezerve eder; bu alan **boş/şeffaf** kalırsa isim satırın ortasına kayar. Bu yüzden alanı görünür bir içerikle (sade yeşil daire) dolduruyoruz. Simge konumu/ismi manifestten değiştirilemez.
+- **Boyut:** 192×192 px.
+- **İçerik:** Tam kanama siyah daire + **beyaz saat gövdesi** (üst/alt beyaz kayış çıkıntıları) + ortada **yeşil (`#00C853`) ekran** — uygulamanın özgün simgesi.
+- Not: Başlatıcının koyu zemininde siyah daire pratikte görünmez; okunan şey beyaz saat gövdesi ve yeşil ekranıdır.
+- Simge konumu ve isim hizası başlatıcı tarafından belirlenir; manifestten değiştirilemez.
 
 ### `txt/title.png`, `txt/lbl_*.png`
 - Yeşil (`#00C853`) metin, şeffaf zemin, 4× süper örnekleme.

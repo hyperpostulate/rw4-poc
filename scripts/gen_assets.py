@@ -41,6 +41,8 @@ SS = 4  # supersampling factor for crisp anti-aliasing
 
 # ---- palette (docs/design.md) ----
 GREEN = (0, 200, 83, 255)     # #00C853
+BLACK = (0, 0, 0, 255)        # #000000
+WHITE = (255, 255, 255, 255)  # #FFFFFF
 
 # ---- geometry (design px; PNG is SS x larger) ----
 LABEL_CANVAS = (360, 60)
@@ -105,28 +107,49 @@ def make_glyph(ch):
 
 
 def make_logo():
-    """Launcher icon: nothing but a single green disc.
+    """Launcher icon: the original watch motif.
 
-    The Redmi Watch 4 launcher reserves a fixed slot to the left of the app
-    name, so the slot must hold *visible* content -- an empty/transparent icon
-    leaves a gap that pushes the label to the middle of the row. Keep it as
-    simple as possible: one green (brand) circle on a transparent ground."""
+    Full-bleed black disc, white watch body (with strap stubs) and a green
+    screen. On the launcher's dark background the black disc is effectively
+    invisible, so what reads is a white watch with a green screen -- the icon
+    this app has always shipped."""
     size = (192, 192)
     n = size[0] * SS
     img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.ellipse([0, 0, n - 1, n - 1], fill=GREEN)
-    img = img.resize(size, Image.LANCZOS)
 
+    cx = cy = n / 2.0
+
+    d.ellipse([0, 0, n - 1, n - 1], fill=BLACK)
+
+    body_w = n * 0.44
+    body_h = n * 0.56
+    d.rounded_rectangle([cx - body_w / 2, cy - body_h / 2,
+                         cx + body_w / 2, cy + body_h / 2],
+                        radius=n * 0.14, fill=WHITE)
+
+    strap_w = n * 0.18
+    strap_h = n * 0.09
+    d.rounded_rectangle([cx - strap_w / 2, n * 0.06,
+                         cx + strap_w / 2, n * 0.06 + strap_h],
+                        radius=strap_h / 2, fill=WHITE)
+    d.rounded_rectangle([cx - strap_w / 2, n * 0.94 - strap_h,
+                         cx + strap_w / 2, n * 0.94],
+                        radius=strap_h / 2, fill=WHITE)
+
+    screen_w = body_w * 0.70
+    screen_h = body_h * 0.60
+    d.rounded_rectangle([cx - screen_w / 2, cy - screen_h / 2,
+                         cx + screen_w / 2, cy + screen_h / 2],
+                        radius=n * 0.045, fill=GREEN)
+
+    img = img.resize(size, Image.LANCZOS)
     path = os.path.join(OUT_DIR, "logo.png")
     img.save(path)
     chk = Image.open(path)
     chk.load()
     assert chk.size == size
     assert chk.getbbox() is not None, "logo must not be empty"
-    # centre pixel is opaque green, corners stay transparent
-    assert chk.getpixel((size[0] // 2, size[1] // 2))[3] > 200
-    assert chk.getpixel((0, 0))[3] < 20
 
 
 def main():
@@ -136,7 +159,7 @@ def main():
         make_text_image("lbl_" + stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
     for ch in CHARS:
         make_glyph(ch)
-    print("generated green-disc logo + title + %d labels + %d glyphs"
+    print("generated watch-motif logo + title + %d labels + %d glyphs"
           % (len(LABELS), len(CHARS)))
 
 
