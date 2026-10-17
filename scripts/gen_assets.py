@@ -29,7 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "src", "common")
 TXT_DIR = os.path.join(OUT_DIR, "txt")
-FONT_PATH = os.path.join(ROOT, "scripts", "assets", "gpsinfo.ttf")
+FONT_PATH = os.path.join(ROOT, "scripts", "assets", "ui-subset.ttf")
 
 if os.path.isdir(TXT_DIR):
     for name in os.listdir(TXT_DIR):
@@ -44,14 +44,18 @@ GREEN = (0, 200, 83, 255)     # #00C853
 BLACK = (0, 0, 0, 255)        # #000000
 WHITE = (255, 255, 255, 255)  # #FFFFFF
 
-# ---- geometry (design px; PNG is SS x larger) ----
-LABEL_CANVAS = (360, 60)
-LABEL_FONT = 40
-LABEL_AT = (8, 30)            # left-middle anchor
+# ---- geometry (assets are generated at their on-screen display size) ----
+# These sizes match the CSS boxes in index.ux exactly; the runtime merely
+# stretches each PNG to its box, so generating at 1x is both smaller and
+# sharper than the old oversized (2-3x) assets. SS is an internal supersample
+# factor used only while drawing, never the stored size.
+LABEL_CANVAS = (150, 25)
+LABEL_FONT = 17
+LABEL_AT = (3, 12)            # left-middle anchor
 
-GLYPH_CANVAS = (48, 64)
-GLYPH_FONT = 50
-GLYPH_BASELINE = 52           # y of the baseline inside the cell
+GLYPH_CANVAS = (16, 22)
+GLYPH_FONT = 17
+GLYPH_BASELINE = 18           # y of the baseline inside the cell
 
 # Launcher icon size in px. Deliberately 96x96, NOT the 192x192 the Vela docs
 # recommend: on the Redmi Watch 4 the launcher reserves a slot to the left of
@@ -60,14 +64,16 @@ GLYPH_BASELINE = 52           # y of the baseline inside the cell
 # Verified on device -- see README "On-device findings".
 LOGO_SIZE = 96
 
-TITLE_CANVAS = (620, 84)
-TITLE_FONT = 54
-TITLE_AT = (8, 42)
+TITLE_CANVAS = (310, 42)
+TITLE_FONT = 27
+TITLE_AT = (4, 21)
 TITLE = ("title", "Redmi Watch 4 PoC")
 
 # ---- character set for the glyph atlas ----
-# Exactly what the clock screen can render: digits, separators and "UTC".
-CHARS = list("0123456789.-:+UTC")
+# Exactly what the clock screen can render: digits, the date separator "-",
+# the UTC-offset separators ":"/"+" (and "-" for negative offsets) and "UTC".
+# No "." glyph: the app never produces one.
+CHARS = list("0123456789-:+UTC")
 
 LABELS = [
     ("tarih", "Tarih"),
@@ -85,7 +91,7 @@ def _save_verified(name, img, size):
     assert img.size == size, (name, img.size, size)
     assert img.getbbox() is not None, "blank image: %s" % name
     path = os.path.join(TXT_DIR, name)
-    img.save(path)
+    img.save(path, optimize=True)
     chk = Image.open(path)
     chk.load()
     assert chk.size == size, (name, chk.size, size)
@@ -152,11 +158,13 @@ def make_logo():
 
     img = img.resize(size, Image.LANCZOS)
     path = os.path.join(OUT_DIR, "logo.png")
-    img.save(path)
+    img.save(path, optimize=True)
     chk = Image.open(path)
     chk.load()
     assert chk.size == size
     assert chk.getbbox() is not None, "logo must not be empty"
+    assert chk.getpixel((size[0] // 2, size[1] // 2))[3] == 255, \
+        "logo centre must be opaque"
 
 
 def main():
