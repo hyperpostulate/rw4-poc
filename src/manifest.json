@@ -5,6 +5,9 @@
   "versionCode": 1,
   "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
+  "display": {
+    "backgroundColor": "#000000"
+  },
   "simulationVersion": "default",
   "deviceTypeList": [
     "watch"

@@ -1,49 +1,41 @@
 <template>
   <div class="app">
-    <!-- Single screen: GPS Info (live geolocation data + status row). -->
-    <div class="screen gps">
+    <div class="screen">
       <div class="gps-list">
         <div class="data-row">
-          <text class="label" style="color:#00C853;font-size:16px;">Enlem</text>
+          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Enlem</text>
           <div class="value-col">
-            <text class="value" style="color:#00C853;font-size:20px;">{{ latText }}</text>
-            <text class="sub" style="color:#00C853;font-size:14px;">{{ latDms }}</text>
+            <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ latText }}</text>
+            <text class="sub" style="width:240px;height:22px;font-size:14px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ latDms }}</text>
           </div>
         </div>
-
         <div class="data-row">
-          <text class="label" style="color:#00C853;font-size:16px;">Boylam</text>
+          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Boylam</text>
           <div class="value-col">
-            <text class="value" style="color:#00C853;font-size:20px;">{{ lonText }}</text>
-            <text class="sub" style="color:#00C853;font-size:14px;">{{ lonDms }}</text>
+            <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ lonText }}</text>
+            <text class="sub" style="width:240px;height:22px;font-size:14px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ lonDms }}</text>
           </div>
         </div>
-
         <div class="data-row">
-          <text class="label" style="color:#00C853;font-size:16px;">İrtifa</text>
-          <text class="value" style="color:#00C853;font-size:20px;">{{ altText }}</text>
+          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">İrtifa</text>
+          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ altText }}</text>
         </div>
-
         <div class="data-row">
-          <text class="label" style="color:#00C853;font-size:16px;">Hız</text>
-          <text class="value" style="color:#00C853;font-size:20px;">{{ speedText }}</text>
+          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Hız</text>
+          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ speedText }}</text>
         </div>
-
         <div class="data-row">
-          <text class="label" style="color:#00C853;font-size:16px;">Doğruluk</text>
-          <text class="value" style="color:#00C853;font-size:20px;">{{ accText }}</text>
+          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Doğruluk</text>
+          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ accText }}</text>
         </div>
-
         <div class="data-row">
-          <text class="label" style="color:#00C853;font-size:16px;">Zaman</text>
-          <text class="value" style="color:#00C853;font-size:20px;">{{ timeText }}</text>
+          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Zaman</text>
+          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ timeText }}</text>
         </div>
       </div>
-
-      <!-- Durum çubuğu -->
       <div class="status-row">
-        <div class="status-dot" style="background-color: {{ gpsStatusColor }};"></div>
-        <text class="status-text" style="color: {{ gpsStatusColor }};font-size:16px;">{{ gpsStatusText }}</text>
+        <div class="status-dot" style="width:12px;height:12px;background-color:{{ gpsStatusColor }};"></div>
+        <text class="status-text" style="width:320px;height:24px;font-size:16px;lines:1;text-overflow:ellipsis;color:{{ gpsStatusColor }};">{{ gpsStatusText }}</text>
       </div>
     </div>
   </div>
@@ -238,72 +230,80 @@ export default {
 
 <style>
 .app {
-  width: 100%;
-  height: 100%;
+  width: 390px;
+  height: 450px;
   background-color: #000000;
 }
 
 .screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background-color: #000000;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ===================== GPS ===================== */
-.gps {
+  width: 390px;
+  height: 450px;
+  padding: 12px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 16px;
+  background-color: #000000;
 }
 
 .gps-list {
-  width: 100%;
+  width: 366px;
+  height: 360px;
   flex-direction: column;
   align-items: flex-start;
-  flex-grow: 1;
 }
 
 .data-row {
-  width: 100%;
+  width: 366px;
+  height: 54px;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  justify-content: flex-start;
+  margin-bottom: 6px;
 }
 
 .label {
+  width: 120px;
+  height: 26px;
   font-size: 16px;
+  lines: 1;
   color: #00C853;
 }
 
 .value-col {
+  width: 240px;
+  height: 52px;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
 }
 
 .value {
+  width: 240px;
+  height: 28px;
   font-size: 20px;
-  color: #00C853;
+  lines: 1;
   text-align: right;
+  text-overflow: ellipsis;
+  color: #00C853;
 }
 
 .sub {
+  width: 240px;
+  height: 22px;
   font-size: 14px;
-  color: #00C853;
+  lines: 1;
   text-align: right;
+  text-overflow: ellipsis;
+  color: #00C853;
 }
 
 .status-row {
-  width: 100%;
+  width: 366px;
+  height: 36px;
+  margin-top: 6px;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: 6px;
 }
 
 .status-dot {
@@ -311,14 +311,14 @@ export default {
   height: 12px;
   border-radius: 6px;
   margin-right: 8px;
-  background-color: #FFD600;
 }
 
 .status-text {
+  width: 320px;
+  height: 24px;
   font-size: 16px;
-}
-
-text {
+  lines: 1;
+  text-overflow: ellipsis;
   color: #00C853;
 }
 </style>

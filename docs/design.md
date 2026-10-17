@@ -16,7 +16,7 @@ AMOLED enerji tasarrufu için tamamen siyah arka plan zorunludur. Kontrast, dü�
 | **Vurgu/Logo** | `#FF4D4D` | Parlak Kırmızı - Uygulama ikonu detayı |
 
 ### Cihaz Uyumluluğu Notu
-Vela işletim sisteminin varsayılan metin rengi `rgba(0,0,0,0.54)` olduğu için gerçek siyah (`#000000`) arka planda görünmez hale gelmektedir. Ayrıca bazı cihazlarda sınıf tabanlı renk tanımlamaları her zaman stabil çalışmayabilmektedir. Okunabilirliği garanti altına almak adına tüm metne genel bir `text { color: #00C853; }` kuralı atanmış ve kritik alanlara inline (satır içi) renk stilleri eklenmiştir.
+RW4 Vela metin işleyici sistemi, `<text>` bileşenleri için açıkça belirtilmiş `width` ve `height` değerlerine ihtiyaç duyar; aksi takdirde otomatik boyutlandırma (~0x0) nedeniyle metinler kaybolmakta veya tek karakterden sonra alt satıra geçerek okunmaz hale gelmektedir. Bu nedenle yerleşim planı, esnek (flex auto-sizing) yapılar yerine sabit boyutlu geometrik kutular üzerine kurulmuştur. Metinlerin yanlış yere kırılmasını önlemek için `lines: 1` parametresi kullanılmış ve uzun değerlerin düzgünce kesilmesi için `text-overflow: ellipsis` uygulanmıştır. Standart tasarım genişliği (`designWidth`) 390px olarak belirlenmiştir.
 
 ### Tipografi Ölçeği (Sistem Fontu)
 Sadelik ve netlik için sınırlı bir yazı tipi skalası kullanılır. Hiyerarşi renklerle değil, boyutlarla sağlanır.
@@ -26,8 +26,8 @@ Sadelik ve netlik için sınırlı bir yazı tipi skalası kullanılır. Hiyerar
 - **Alt Satır Detayı (DMS):** `14px` / Regular / Right
 
 ### Boşluk ve Yerleşim (Spacing)
-- **Güvenli Kenar Payı (Safe Margin):** `16px` (Tüm kenarlarda korunmalıdır).
-- **Satır Aralığı:** Sabit `12px` (Her veri bloğu arasında).
+- **Güvenli Kenar Payı (Safe Margin):** `12px` (Tüm kenarlarda korunmalıdır — `.screen` padding).
+- **Satır Aralığı:** Sabit `6px` (Her veri bloğu arasında — `.data-row` margin-bottom).
 
 ---
 
@@ -35,8 +35,8 @@ Sadelik ve netlik için sınırlı bir yazı tipi skalası kullanılır. Hiyerar
 
 GNSS verilerinin sunulduğu tek ekran yapısıdır. Elemanlar yukarıdan aşağıya doğru dikey bir liste halinde sıralanır.
 
-### Veri Satırları (Yerleşim: Flex Row, Space-Between)
-Her satır; sol tarafta `16px Yeşil Metin` etiket ve sağ tarafta `20px Yeşil Metin` değer şeklinde kurgulanır.
+### Veri Satırları (Sabit Geometri)
+Her satır; sol tarafta `16px Yeşil Metin` etiket ve sağ tarafta `20px Yeşil Metin` değer içeren sabit boyutlu kapsayıcılar şeklinde kurgulanır.
 
 | Alan | Format (Sağ Taraf) | Notlar |
 | :--- | :--- | :--- |
@@ -90,94 +90,18 @@ Sadece uygulama simgesine ait tanımlamalar mevcuttur.
 
 Aşağıdaki blok, `src/pages/index/index.ux` içinde referans alınan stillerdir. Vela'da `display` ve `gap` yoktur; yerleşim doğrudan `flex-direction` ile kurulur, aralıklar `margin` ile verilir. 
 
-**Önemli:** Kararlılık için her `<text>` bileşenine inline `color` ve `font-size` atanmıştır. Global seçici ise temel fallback sağlar.
+**Not:** Gerçek cihazdaki render sorunlarını aşmak amacıyla her `<text>` bileşenine inline `width`, `height`, `lines`, `font-size` ve `color` nitelikleri atanmıştır. Aşağıdaki CSS kuralları bu inline tanımların aynısını yansıtmaktadır.
 
 ```css
-/* Temel Fallback */
-text {
-  color: #00C853;
-}
-
-.app {
-  width: 100%;
-  height: 100%;
-  background-color: #000000;
-}
-
-.screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background-color: #000000;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* GPS veri listesi */
-.gps {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 16px;
-}
-
-.gps-list {
-  width: 100%;
-  flex-direction: column;
-  align-items: flex-start;
-  flex-grow: 1;
-}
-
-/* Veri Satırı Stili */
-.data-row {
-  width: 100%;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.label {
-  font-size: 16px;
-  color: #00C853;
-}
-
-.value-col {
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.value {
-  font-size: 20px;
-  color: #00C853;
-  text-align: right;
-}
-
-.sub {
-  font-size: 14px;
-  color: #00C853;
-  text-align: right;
-}
-
-/* Durum Çubuğu */
-.status-row {
-  width: 100%;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-top: 6px;
-}
-
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 6px;
-  margin-right: 8px;
-  background-color: #FFD600;
-}
-
-.status-text {
-  font-size: 16px;
-}
+.app { width: 390px; height: 450px; background-color: #000000; }
+.screen { width: 390px; height: 450px; padding: 12px; flex-direction: column; align-items: flex-start; justify-content: flex-start; background-color: #000000; }
+.gps-list { width: 366px; height: 360px; flex-direction: column; align-items: flex-start; }
+.data-row { width: 366px; height: 54px; flex-direction: row; align-items: center; justify-content: flex-start; margin-bottom: 6px; }
+.label { width: 120px; height: 26px; font-size: 16px; lines: 1; color: #00C853; }
+.value-col { width: 240px; height: 52px; flex-direction: column; align-items: flex-end; justify-content: center; }
+.value { width: 240px; height: 28px; font-size: 20px; lines: 1; text-align: right; text-overflow: ellipsis; color: #00C853; }
+.sub { width: 240px; height: 22px; font-size: 14px; lines: 1; text-align: right; text-overflow: ellipsis; color: #00C853; }
+.status-row { width: 366px; height: 36px; margin-top: 6px; flex-direction: row; align-items: center; justify-content: center; }
+.status-dot { width: 12px; height: 12px; border-radius: 6px; margin-right: 8px; }
+.status-text { width: 320px; height: 24px; font-size: 16px; lines: 1; text-overflow: ellipsis; color: #00C853; }
 ```
