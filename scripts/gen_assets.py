@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproducible PNG asset generator for the Device Info quick app (time PoC).
+"""Reproducible PNG asset generator for the rw4-poc quick app.
 
 Why images? The Redmi Watch 4 Vela runtime does not draw text glyphs (verified
 on device: <text>, <input type=button> and <input type=text> all paint nothing
@@ -15,10 +15,10 @@ Run from anywhere:
 
     python3 scripts/gen_assets.py
 
-Writes into src/common/:
-  - logo.png       192x192 app icon
-  - txt/lbl_*.png  static field labels (green)
-  - txt/g_*.png    monospace glyph cells, g_<codepoint hex>.png (green)
+Writes into src/common/txt/:
+  - title.png      screen header
+  - lbl_*.png      static field labels (green)
+  - g_*.png        monospace glyph cells, g_<codepoint hex>.png (green)
 
 Idempotent, and every written file is re-opened and verified.
 """
@@ -41,10 +41,6 @@ SS = 4  # supersampling factor for crisp anti-aliasing
 
 # ---- palette (docs/design.md) ----
 GREEN = (0, 200, 83, 255)     # #00C853
-AMBER = (255, 214, 0, 255)    # #FFD600
-RED = (207, 102, 121, 255)    # #CF6679
-WHITE = (255, 255, 255, 255)
-BLACK = (0, 0, 0, 255)
 
 # ---- geometry (design px; PNG is SS x larger) ----
 LABEL_CANVAS = (360, 60)
@@ -76,17 +72,15 @@ def _font(size):
     return ImageFont.truetype(FONT_PATH, size)
 
 
-def _save_verified(name, img, size, allow_blank=False):
+def _save_verified(name, img, size):
     assert img.size == size, (name, img.size, size)
-    if not allow_blank:
-        assert img.getbbox() is not None, "blank image: %s" % name
+    assert img.getbbox() is not None, "blank image: %s" % name
     path = os.path.join(TXT_DIR, name)
     img.save(path)
     chk = Image.open(path)
     chk.load()
     assert chk.size == size, (name, chk.size, size)
-    if not allow_blank:
-        assert chk.getbbox() is not None, "blank on disk: %s" % name
+    assert chk.getbbox() is not None, "blank on disk: %s" % name
 
 
 def make_text_image(name, text, size, font_size, at, fill):
@@ -111,49 +105,16 @@ def make_glyph(ch):
 
 
 def make_logo():
-    S = 192
-    N = S * SS
-    img = Image.new("RGBA", (N, N), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-
-    cx = N / 2.0
-    cy = N / 2.0
-
-    # Full-bleed GREEN disc: the launcher background is black, so the disc
-    # must be a visible colour for the icon to read as a circle.
-    d.ellipse([0, 0, N - 1, N - 1], fill=GREEN)
-
-    # Watch body, centred on the disc.
-    body_w = N * 0.42
-    body_h = N * 0.54
-    d.rounded_rectangle([cx - body_w / 2, cy - body_h / 2,
-                         cx + body_w / 2, cy + body_h / 2],
-                        radius=N * 0.13, fill=BLACK)
-
-    # Strap stubs, symmetric about the centre.
-    strap_w = N * 0.17
-    strap_h = N * 0.08
-    d.rounded_rectangle([cx - strap_w / 2, N * 0.07,
-                         cx + strap_w / 2, N * 0.07 + strap_h],
-                        radius=strap_h / 2, fill=BLACK)
-    d.rounded_rectangle([cx - strap_w / 2, N * 0.93 - strap_h,
-                         cx + strap_w / 2, N * 0.93],
-                        radius=strap_h / 2, fill=BLACK)
-
-    # White screen, centred on the body.
-    screen_w = body_w * 0.72
-    screen_h = body_h * 0.60
-    d.rounded_rectangle([cx - screen_w / 2, cy - screen_h / 2,
-                         cx + screen_w / 2, cy + screen_h / 2],
-                        radius=N * 0.04, fill=WHITE)
-
-    out = img.resize((S, S), Image.LANCZOS)
+    """The Vela manifest requires an `icon`, but the Redmi Watch 4 launcher
+    does not render our artwork the way we intend. Ship a fully transparent
+    192x192 PNG so the launcher draws no custom tile at all."""
+    size = (192, 192)
     path = os.path.join(OUT_DIR, "logo.png")
-    out.save(path)
+    Image.new("RGBA", size, (0, 0, 0, 0)).save(path)
     chk = Image.open(path)
     chk.load()
-    assert chk.size == (S, S)
-    assert chk.getbbox() is not None
+    assert chk.size == size
+    assert chk.getbbox() is None, "logo must be fully transparent"
 
 
 def main():
@@ -163,7 +124,8 @@ def main():
         make_text_image("lbl_" + stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
     for ch in CHARS:
         make_glyph(ch)
-    print("generated title + %d labels + %d glyphs + logo" % (len(LABELS), len(CHARS)))
+    print("generated transparent logo + title + %d labels + %d glyphs"
+          % (len(LABELS), len(CHARS)))
 
 
 if __name__ == "__main__":

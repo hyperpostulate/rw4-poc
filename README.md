@@ -134,7 +134,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # default string bundle
 │   ├── common/
-│   │   ├── logo.png           # generated app icon (watch), 192x192
+│   │   ├── logo.png           # manifest-required icon: fully transparent 192x192 PNG
 │   │   └── txt/               # generated PNG text: labels, title and the glyph atlas (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -167,7 +167,7 @@ The whole app: template (title + four label/value rows), script (clock formattin
 
 `scripts/gen_assets.py`
 
-Generates the title, the labels, the app icon and the glyph atlas deterministically; re-reads every file it writes and asserts dimensions and non-blank content
+Generates the title, the labels, the glyph atlas and a transparent placeholder icon deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images)
 
 `docs/design.md`
 
@@ -419,7 +419,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # varsayılan metin paketi
 │   ├── common/
-│   │   ├── logo.png           # üretilen uygulama ikonu (saat), 192x192
+│   │   ├── logo.png           # manifestin istediği ikon: tamamen şeffaf 192x192 PNG
 │   │   └── txt/               # üretilen PNG metinler: etiketler, başlık ve glif atlası (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -452,7 +452,7 @@ Uygulamanın tamamı: şablon (başlık + dört etiket/değer satırı), script 
 
 `scripts/gen_assets.py`
 
-Başlığı, etiketleri, uygulama ikonunu ve glif atlasını belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyut ve boş olmama kontrolünü yapar
+Başlığı, etiketleri, glif atlasını ve şeffaf yer tutucu ikonu belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular
 
 `docs/design.md`
 
