@@ -56,8 +56,8 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 
 ### `logo.png` (App Icon)
 - **Boyut:** 192×192 px
-- **Zemin:** Tam kanama siyah daire (`#000000`) — başlatıcı simgeyi daire olarak gösterir; simge tamamen daire içine çizilir.
-- **Simge:** Basit bir saat silueti — beyaz gövde + üst/alt kayış çıkıntıları, ortada yeşil (`#00C853`) ekran.
+- **Zemin:** Tam kanama **yeşil** daire (`#00C853`) — başlatıcı arka planı siyah olduğu için dairenin görünür bir renkte olması gerekir; simge böylece net biçimde yuvarlak okunur.
+- **Simge:** Basit bir saat silueti — siyah gövde + üst/alt siyah kayış çıkıntıları, ortada beyaz ekran.
 - **Teknik:** 4× süper örnekleme sonrası Lanczos filtresiyle küçültme.
 
 ### `txt/title.png`, `txt/lbl_*.png`

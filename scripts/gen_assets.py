@@ -119,32 +119,33 @@ def make_logo():
     cx = N / 2.0
     cy = N / 2.0
 
-    # Full-bleed black disc so the launcher icon reads as a perfect circle.
-    d.ellipse([0, 0, N - 1, N - 1], fill=BLACK)
+    # Full-bleed GREEN disc: the launcher background is black, so the disc
+    # must be a visible colour for the icon to read as a circle.
+    d.ellipse([0, 0, N - 1, N - 1], fill=GREEN)
 
     # Watch body, centred on the disc.
-    body_w = N * 0.44
-    body_h = N * 0.56
+    body_w = N * 0.42
+    body_h = N * 0.54
     d.rounded_rectangle([cx - body_w / 2, cy - body_h / 2,
                          cx + body_w / 2, cy + body_h / 2],
-                        radius=N * 0.14, fill=WHITE)
+                        radius=N * 0.13, fill=BLACK)
 
     # Strap stubs, symmetric about the centre.
-    strap_w = N * 0.18
-    strap_h = N * 0.09
-    d.rounded_rectangle([cx - strap_w / 2, N * 0.06,
-                         cx + strap_w / 2, N * 0.06 + strap_h],
-                        radius=strap_h / 2, fill=WHITE)
-    d.rounded_rectangle([cx - strap_w / 2, N * 0.94 - strap_h,
-                         cx + strap_w / 2, N * 0.94],
-                        radius=strap_h / 2, fill=WHITE)
+    strap_w = N * 0.17
+    strap_h = N * 0.08
+    d.rounded_rectangle([cx - strap_w / 2, N * 0.07,
+                         cx + strap_w / 2, N * 0.07 + strap_h],
+                        radius=strap_h / 2, fill=BLACK)
+    d.rounded_rectangle([cx - strap_w / 2, N * 0.93 - strap_h,
+                         cx + strap_w / 2, N * 0.93],
+                        radius=strap_h / 2, fill=BLACK)
 
-    # Green screen, centred on the body.
-    screen_w = body_w * 0.70
+    # White screen, centred on the body.
+    screen_w = body_w * 0.72
     screen_h = body_h * 0.60
     d.rounded_rectangle([cx - screen_w / 2, cy - screen_h / 2,
                          cx + screen_w / 2, cy + screen_h / 2],
-                        radius=N * 0.045, fill=GREEN)
+                        radius=N * 0.04, fill=WHITE)
 
     out = img.resize((S, S), Image.LANCZOS)
     path = os.path.join(OUT_DIR, "logo.png")
