@@ -53,10 +53,11 @@ GLYPH_CANVAS = (48, 64)
 GLYPH_FONT = 50
 GLYPH_BASELINE = 52           # y of the baseline inside the cell
 
-# Launcher icon size in px. The Vela docs ask for 192x192, but the Redmi Watch
-# 4 launcher appears to reserve a wide icon slot before the app name; this is a
-# deliberate experiment to see whether the slot width (and therefore the label
-# x position) is derived from the image's pixel dimensions.
+# Launcher icon size in px. Deliberately 96x96, NOT the 192x192 the Vela docs
+# recommend: on the Redmi Watch 4 the launcher reserves a slot to the left of
+# the app name whose width follows the image's pixel size, so a 192x192 icon
+# pushes the name to the middle of the row while 96x96 keeps it in place.
+# Verified on device -- see README "On-device findings".
 LOGO_SIZE = 96
 
 TITLE_CANVAS = (620, 84)

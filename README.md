@@ -65,6 +65,12 @@ There is **no GNSS sensor API** in Vela and **no step/heart-rate/health API** ex
 
 > `203` is the Vela system code for *"this function is not supported"* (a permission problem would be `400`/`402`). It is not recoverable by the app.
 
+### Launcher icon size moves the app name
+
+- The launcher reserves a slot to the left of the app name, and that slot's **width follows the icon PNG's pixel size** — so the icon also decides where the label starts.
+- Verified on device: a **`192x192`** icon (the size the Vela docs recommend) pushed the app name to the *middle* of the row, while shrinking the icon to **`96x96`** pulled the name back to its normal position.
+- No manifest field controls the label's position, alignment or size (`name` is the only label input), so the icon is the only lever. Shipping a **`96x96`** `logo.png` is therefore deliberate, not an accident.
+
 * * *
 
 ## Requirements
@@ -134,7 +140,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # default string bundle
 │   ├── common/
-│   │   ├── logo.png           # launcher icon: watch motif (white body, green screen), 96x96 (slot-width test)
+│   │   ├── logo.png           # launcher icon: watch motif, 96x96 (see On-device findings: icon size moves the app name)
 │   │   └── txt/               # generated PNG text: labels, title and the glyph atlas (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -167,7 +173,7 @@ The whole app: template (title + four label/value rows), script (clock formattin
 
 `scripts/gen_assets.py`
 
-Generates the title, the labels, the glyph atlas and the launcher icon (a watch motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images)
+Generates the title, the labels, the glyph atlas and the launcher icon (a 96x96 watch motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images)
 
 `docs/design.md`
 
@@ -350,6 +356,12 @@ Vela'da **GNSS sensör API'si yoktur** ve hızlı uygulamalara açık **adım/na
 
 > `203`, Vela'nın *"bu işlev desteklenmiyor"* sistem kodudur (izin sorunu olsaydı `400`/`402` olurdu). Uygulama tarafından giderilemez.
 
+### Başlatıcı simge boyutu, uygulama ismini kaydırır
+
+- Başlatıcı, uygulama isminin solunda bir alan ayırır ve bu alanın **genişliği simge PNG'sinin piksel boyutunu izler** — yani ismin nereden başlayacağını da simge belirler.
+- Cihazda doğrulandı: **`192x192`** simge (Vela dokümanlarının önerdiği boyut) uygulama ismini satırın *ortasına* itti; simgeyi **`96x96`**'ya küçültmek ismi normal konumuna geri getirdi.
+- İsmin konumunu, hizasını veya boyutunu kontrol eden bir manifest alanı yoktur (`name` tek etiket girdisidir); tek kaldıraç simgedir. Bu yüzden **`96x96`** `logo.png` bilinçlidir, tesadüf değildir.
+
 * * *
 
 ## Gereksinimler
@@ -419,7 +431,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # varsayılan metin paketi
 │   ├── common/
-│   │   ├── logo.png           # başlatıcı simgesi: saat motifi (beyaz gövde, yeşil ekran), 96x96 (alan genişliği denemesi)
+│   │   ├── logo.png           # başlatıcı simgesi: saat motifi, 96x96 (bkz. Cihaz üstü bulgular: simge boyutu ismi kaydırır)
 │   │   └── txt/               # üretilen PNG metinler: etiketler, başlık ve glif atlası (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -452,7 +464,7 @@ Uygulamanın tamamı: şablon (başlık + dört etiket/değer satırı), script 
 
 `scripts/gen_assets.py`
 
-Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (saat motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular
+Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (96x96 saat motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular
 
 `docs/design.md`
 
