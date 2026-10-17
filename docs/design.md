@@ -87,69 +87,106 @@ Sadece uygulama simgesine ait tanımlamalar mevcuttur.
 
 ## 5. Uygulama Notları ve Stil Blokları
 
-Arayüz geliştirmede baz alınacak stil taslakları:
+Aşağıdaki blok, `src/pages/index/index.ux` içinde birebir kullanılan stillerdir. Vela'da `display` ve `gap` yoktur; yerleşim doğrudan `flex-direction` ile kurulur, aralıklar `margin` ile verilir.
 
 ```css
-/* Ana Konteyner */
-.screen-container {
-  display: flex;
+.app {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #000000;
-  width: 390px;
-  height: 450px;
+}
+
+/* GPS veri listesi */
+.gps {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 16px;
+}
+
+.gps-list {
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-grow: 1;
 }
 
 /* Veri Satırı Stili */
 .data-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
   width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 
 .label {
-  color: #BDBDBD;
   font-size: 16px;
+  color: #BDBDBD;
+}
+
+.value-col {
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .value {
-  color: #FFFFFF;
   font-size: 20px;
+  color: #FFFFFF;
   text-align: right;
 }
 
-.sub-value {
-  color: #BDBDBD;
+.sub {
   font-size: 14px;
+  color: #BDBDBD;
   text-align: right;
 }
 
 /* Durum Çubuğu ve Animasyon */
 .status-row {
-  display: flex;
+  width: 100%;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-top: auto;
+  margin-top: 6px;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  margin-right: 8px;
+  background-color: #FFD600;
 }
 
-.pulse {
-  animation: opacityPulse 1.5s infinite ease-in-out;
+.status-text {
+  font-size: 16px;
 }
 
-@keyframes opacityPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.2;
+  }
+}
+
+.pulsing {
+  animation-name: pulse;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 ```
