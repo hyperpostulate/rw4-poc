@@ -1,107 +1,86 @@
-# UI/UX Tasarım Spesifikasyonu: GPS Info (Redmi Watch 4)
+# UI/UX Tasarım Spesifikasyonu: rw4-poc (Redmi Watch 4)
 
-Bu belge, Redmi Watch 4 akıllı saat için geliştirilen GPS Info uygulamasının kesin tasarım kurallarını belirler. Uygulama, tek ekran üzerinden yüksek okunabilirlikte GNSS verilerini sunmayı amaçlar.
+Bu belge, Redmi Watch 4 için geliştirilen **rw4-poc** uygulamasının kesin tasarım kurallarını belirler. Uygulama, cihaz saatinden okunan dört değeri tek ekranda sunar.
 
 ## 1. Genel Görsel Dil
 
 ### Tema ve Renk Paleti
-AMOLED enerji tasarrufu için tamamen siyah arka plan zorunludur. Kontrast, düşük ışıklı ortamlarda okunabilirliği artırmak için maksimize edilmiştir.
+AMOLED enerji tasarrufu için tamamen siyah arka plan zorunludur.
 
 | Kullanım Alanı | Değer (Hex) | Açıklama |
 | :--- | :--- | :--- |
 | **Arka Plan** | `#000000` | Saf Siyah (True Black) |
-| **Genel Veri Metni** | `#00C853` | Canlı Yeşil - Tüm koordinat, etiket ve değerler |
-| **Uyarı/Arama** | `#FFD600` | Sarı - Uydu araması devam ediyor |
-| **Hata** | `#CF6679` | Pastel Kırmızı - Sistem hataları veya kapalı sensör |
-| **Vurgu/Logo** | `#FF4D4D` | Parlak Kırmızı - Uygulama ikonu detayı |
+| **Başlık ve Değerler** | `#00C853` | Canlı Yeşil |
 
-### Cihaz Uyumluluğu Notu
-RW4 Vela metin işleyici sistemi, `<text>` bileşenleri için açıkça belirtilmiş `width` ve `height` değerlerine ihtiyaç duyar; aksi takdirde otomatik boyutlandırma (~0x0) nedeniyle metinler kaybolmakta veya tek karakterden sonra alt satıra geçerek okunmaz hale gelmektedir. Bu nedenle yerleşim planı, esnek (flex auto-sizing) yapılar yerine sabit boyutlu geometrik kutular üzerine kurulmuştur. Metinlerin yanlış yere kırılmasını önlemek için `lines: 1` parametresi kullanılmış ve uzun değerlerin düzgünce kesilmesi için `text-overflow: ellipsis` uygulanmıştır. Standart tasarım genişliği (`designWidth`) 390px olarak belirlenmiştir.
+### Kritik Cihaz Notu: Metin Görsel Olarak Çizilir
+Redmi Watch 4'ün Vela çalışma zamanı `<text>`/`<span>`/`<input>` bileşenleri için **hiçbir okunabilir glif çizmez** (gerçek cihazda doğrulandı; paketlenen bir `@font-face` fontu da etkisizdir). `<image>` ise sorunsuz çizilir. Bu nedenle:
 
-### Tipografi Ölçeği (Sistem Fontu)
-Sadelik ve netlik için sınırlı bir yazı tipi skalası kullanılır. Hiyerarşi renklerle değil, boyutlarla sağlanır.
+- **Statik yazılar** (başlık, etiketler) tek bir PNG olarak üretilip `<image src="...">` ile gösterilir.
+- **Dinamik değerler** (tarih, saat, dilim, unix) tek aralıklı bir **glif atlasından** dizilir: her karakter için ayrı bir şeffaf PNG (`src/common/txt/g_<kod noktası hex>.png`). Şablonda `for="{{ row }}"` + `src="{{ $item }}"` ile karakter başına bir `<image>` çizilir.
+- Atlas dışı bir karakter `?` olarak çizilir (`0x3F`).
 
-- **Ana Değer:** `20px` / Medium / Right
-- **Yardımcı Bilgi (Etiket):** `16px` / Regular / Left
-- **Alt Satır Detayı (DMS):** `14px` / Regular / Right
+Tüm görseller `scripts/gen_assets.py` tarafından belirlenimci biçimde üretilir ve her dosya yazıldıktan sonra geri okunup doğrulanır.
+
+### Tipografi Ölçeği (Görsel)
+Hiyerarşi renkle değil, görsel boyutuyla sağlanır.
+
+- **Başlık:** 310×42 px görsel ( "Redmi Watch 4 PoC" )
+- **Etiket:** 150×25 px görsel
+- **Değer glifi:** 16×22 px (glif hücresi 48×64'ten küçültülür)
 
 ### Boşluk ve Yerleşim (Spacing)
-- **Güvenli Kenar Payı (Safe Margin):** `12px` (Tüm kenarlarda korunmalıdır — `.screen` padding).
-- **Satır Aralığı:** Sabit `6px` (Her veri bloğu arasında — `.data-row` margin-bottom).
+- **Sol kenar payı:** `16px` (`.app` padding-left).
+- **Üst kenar payı:** `14px`.
+- **Başlık altı boşluk:** `18px`.
+- **Satır aralığı:** `16px` (her `.row` margin-bottom).
 
 ---
 
-## 2. Ekran: GPS (Veri Listesi)
+## 2. Ekran: Zaman (Tek Ekran)
 
-GNSS verilerinin sunulduğu tek ekran yapısıdır. Elemanlar yukarıdan aşağıya doğru dikey bir liste halinde sıralanır.
+Elemanlar yukarıdan aşağıya dikey bir liste halinde sıralanır. Her satır; üstte küçük yeşil etiket görseli, altında tam genişlikte yeşil glif dizisi içerir.
 
-### Veri Satırları (Sabit Geometri)
-Her satır; sol tarafta `16px Yeşil Metin` etiket ve sağ tarafta `20px Yeşil Metin` değer içeren sabit boyutlu kapsayıcılar şeklinde kurgulanır.
-
-| Alan | Format (Sağ Taraf) | Notlar |
+| Alan | Format | Örnek |
 | :--- | :--- | :--- |
-| **Enlem** | `41.00823°` <br/> `41° 00' 29.6" K` | Alt satır DMS formatındadır (`14px yeşil`) |
-| **Boylam** | `28.97839°` <br/> `28° 58' 42.2" D` | Alt satır DMS formatındadır (`14px yeşil`) |
-| **İrtifa** | `152 m` | Deniz seviyesinden metre cinsinden yükseklik |
-| **Hız** | `1.2 m/s (4.3 km/h)` | Hem m/s hem km/h gösterimi yapılır |
-| **Doğruluk** | `± 3.5 m` | Mevcut konumun yatay hassasiyeti |
-| **Zaman** | `14:20:05` | Güncel UTC/Local zaman damgası |
+| **Tarih** | `YYYY-AA-GG` | `2026-10-18` |
+| **Saat** | `SS:DD:SS` (her saniye) | `14:23:05` |
+| **Dilim** | `UTC±SS:DD` | `UTC+03:00` |
+| **Unix** | saniye (tam sayı) | `1760797385` |
 
-### Durum Çubuğu (Ekran Altı)
-Listenin en altında yer alan dinamik bilgi alanı:
-- **Aranıyor:** Sarı metin ve sarı nokta. `"Konum Aranıyor..."`
-- **Aktif (Fix):** Yeşil metin. `"Sinyal Güçlü"`
-- **Hatalar:** Kırmızı metin.
-  - Kod 203: `"Desteklenmiyor"`
-  - Kod 204: `"Zaman Aşımı"`
-  - Kod 1000+: `"Konum Kapalı"`
+### Durum Matrisi
+Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sayfa gösterildiğinde başlar, gizlendiğinde/destroy edildiğinde durur (pil tasarrufu). Uygulama hiçbir izin istemez; yalnızca JS saati (`new Date()`) kullanılır.
 
 ---
 
-## 3. Durum Matrisi (Copy Guide)
-
-Uygulamanın çalışma anındaki farklı senaryolar için içerik rehberi:
-
-| Senaryo | Metin İçeriği | Görsel Durum |
-| :--- | :--- | :--- |
-| **İlk Açılış** | `"Uydu Bağlantısı Kuruluyor..."` | Sarı Dot (Statik) |
-| **Normal Çalışma** | `[Güncel Koordinatlar ve Veriler]` | Yeşil Durum Metni / Statik Liste |
-| **Çevrimdışı** | `"SİNYAL YOK (Kod: XXX)"` | Kırmızı Durum Metni / Veri Alanları Boş |
-
----
-
-## 4. Varlık (Asset) Spesifikasyonları
-
-Sadece uygulama simgesine ait tanımlamalar mevcuttur.
+## 3. Varlık (Asset) Spesifikasyonları
 
 ### `logo.png` (App Icon)
-- **Boyut:** $192 \times 192\text{ px}$ (Opaque RGB)
-- **Zemin:** Siyah (`#000000`), köşeler $22\%$ oranında yuvarlatılmış kare.
-- **Simge Geometrisi:** 
-  - **Tip:** Modern Lokasyon Pini (Location Pin).
-  - **Renk:** Ana gövde Beyaz (`#FFFFFF`).
-  - **Yapı:** Ortalanmış dairesel başlık ve aşağıya doğru sivrilen kuyruk.
-  - **Detay:** Başlık merkezinde koyu gri (`#111111`) dairesel boşluk; boşluğun çevresinde çok ince kırmızı (`#FF4D4D`) vurgu halkası.
-- **Teknik:** Asset, $4\times$ süper örnekleme (supersampling) sonrası Lanczos filtresiyle küçültülmüştür.
+- **Boyut:** 192×192 px
+- **Zemin:** Siyah (`#000000`), köşeler %22 oranında yuvarlatılmış kare.
+- **Simge:** Basit bir saat silueti — beyaz gövde + üst/alt kayış çıkıntıları, ortada yeşil (`#00C853`) ekran.
+- **Teknik:** 4× süper örnekleme sonrası Lanczos filtresiyle küçültme.
+
+### `txt/title.png`, `txt/lbl_*.png`
+- Yeşil (`#00C853`) metin, şeffaf zemin, 4× süper örnekleme.
+- Etiket tuvali 360×60 (görüntülenen 150×25); başlık tuvali 620×84 (görüntülenen 310×42).
+
+### `txt/g_<hex>.png` (Glif Atlası)
+- **Boyut:** 48×64 px (ekranda 16×22).
+- Yeşil glif, şeffaf zemin, taban çizgisi hücre içinde 52 px.
+- **Karakter seti (`CHARS`):** `0-9`, `.`, `-`, `:`, `+`, `U`, `T`, `C` — yalnızca saat ekranının üretabileceği karakterler. Yeni dinamik metin eklenirse buraya karakter eklenmelidir.
+- **Uyarı:** Çok sayıda glif görseli ekranı yavaşlatır; ekrandaki `<image>` sayısını az tutun.
 
 ---
 
-## 5. Uygulama Notları ve Stil Blokları
+## 4. Stil Blokları
 
-Aşağıdaki blok, `src/pages/index/index.ux` içinde referans alınan stillerdir. Vela'da `display` ve `gap` yoktur; yerleşim doğrudan `flex-direction` ile kurulur, aralıklar `margin` ile verilir. 
-
-**Not:** Gerçek cihazdaki render sorunlarını aşmak amacıyla her `<text>` bileşenine inline `width`, `height`, `lines`, `font-size` ve `color` nitelikleri atanmıştır. Aşağıdaki CSS kuralları bu inline tanımların aynısını yansıtmaktadır.
+`src/pages/index/index.ux` içinde kullanılan stiller. Vela'da `display` ve `gap` yoktur; yerleşim `flex-direction` ve `margin` ile kurulur.
 
 ```css
-.app { width: 390px; height: 450px; background-color: #000000; }
-.screen { width: 390px; height: 450px; padding: 12px; flex-direction: column; align-items: flex-start; justify-content: flex-start; background-color: #000000; }
-.gps-list { width: 366px; height: 360px; flex-direction: column; align-items: flex-start; }
-.data-row { width: 366px; height: 54px; flex-direction: row; align-items: center; justify-content: flex-start; margin-bottom: 6px; }
-.label { width: 120px; height: 26px; font-size: 16px; lines: 1; color: #00C853; }
-.value-col { width: 240px; height: 52px; flex-direction: column; align-items: flex-end; justify-content: center; }
-.value { width: 240px; height: 28px; font-size: 20px; lines: 1; text-align: right; text-overflow: ellipsis; color: #00C853; }
-.sub { width: 240px; height: 22px; font-size: 14px; lines: 1; text-align: right; text-overflow: ellipsis; color: #00C853; }
-.status-row { width: 366px; height: 36px; margin-top: 6px; flex-direction: row; align-items: center; justify-content: center; }
-.status-dot { width: 12px; height: 12px; border-radius: 6px; margin-right: 8px; }
-.status-text { width: 320px; height: 24px; font-size: 16px; lines: 1; text-overflow: ellipsis; color: #00C853; }
+.app { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding-left: 16px; padding-top: 14px; background-color: #000000; }
+.title { width: 310px; height: 42px; margin-left: 4px; margin-bottom: 18px; }
+.row { width: 360px; flex-direction: column; align-items: flex-start; justify-content: flex-start; margin-bottom: 16px; }
+.lbl { width: 150px; height: 25px; margin-left: 4px; }
+.val { width: 348px; flex-direction: row; align-items: center; justify-content: flex-start; margin-left: 4px; }
+.g { width: 16px; height: 22px; }
 ```

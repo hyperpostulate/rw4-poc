@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
-"""Reproducible PNG asset generator for gps-info.
+"""Reproducible PNG asset generator for the Device Info quick app (time PoC).
 
-Why images? The Redmi Watch 4 Vela quick-app runtime does not render any
-text glyphs (verified on device: <text>, <input type=button> and
-<input type=text> all paint nothing / notdef boxes), while <image> renders
-perfectly. So every piece of visible text is pre-rendered here to PNG and
-shown with <image>.
+Why images? The Redmi Watch 4 Vela runtime does not draw text glyphs (verified
+on device: <text>, <input type=button> and <input type=text> all paint nothing
+or notdef boxes), while <image> renders perfectly. So every visible piece of
+text is pre-rendered to PNG and shown with <image>.
+
+Dynamic values (the clock, timezone, unix timestamp) are composed at runtime
+from a small monospace glyph atlas: one transparent PNG per character,
+addressed by its codepoint in hex (g_<hex>.png). index.ux maps each character
+of a string to '/common/txt/g_' + code.toString(16) + '.png'.
 
 Run from anywhere:
 
     python3 scripts/gen_assets.py
 
 Writes into src/common/:
-  - logo.png                     192x192 app icon (black rounded square + pin)
-  - txt/lbl_*.png                static row labels (green)
-  - txt/st_*.png                 status strings (colored)
-  - txt/g_*.png                  monospace glyph cells for dynamic values (green)
+  - logo.png       192x192 app icon
+  - txt/lbl_*.png  static field labels (green)
+  - txt/g_*.png    monospace glyph cells, g_<codepoint hex>.png (green)
 
-Idempotent: running repeatedly produces the same output. Each written file is
-re-opened and verified (dimensions + non-blank content).
+Idempotent, and every written file is re-opened and verified.
 """
 
 import os
@@ -28,60 +30,45 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "src", "common")
 TXT_DIR = os.path.join(OUT_DIR, "txt")
 FONT_PATH = os.path.join(ROOT, "scripts", "assets", "gpsinfo.ttf")
+
+if os.path.isdir(TXT_DIR):
+    for name in os.listdir(TXT_DIR):
+        if name.endswith(".png"):
+            os.remove(os.path.join(TXT_DIR, name))
 os.makedirs(TXT_DIR, exist_ok=True)
 
 SS = 4  # supersampling factor for crisp anti-aliasing
 
-# ---- palette (docs/design.md section 1) ----
-GREEN = (0, 200, 83, 255)    # #00C853
-AMBER = (255, 214, 0, 255)   # #FFD600
-RED = (207, 102, 121, 255)   # #CF6679
+# ---- palette (docs/design.md) ----
+GREEN = (0, 200, 83, 255)     # #00C853
+AMBER = (255, 214, 0, 255)    # #FFD600
+RED = (207, 102, 121, 255)    # #CF6679
 WHITE = (255, 255, 255, 255)
 BLACK = (0, 0, 0, 255)
-DARK_HOLE = (17, 17, 17, 255)
 
-# ---- text image geometry (design px; PNG is SS x larger) ----
-LABEL_CANVAS = (240, 60)
-LABEL_FONT = 38
-LABEL_AT = (24, 30)  # left-middle anchor (ample left margin: avoids edge clip)
+# ---- geometry (design px; PNG is SS x larger) ----
+LABEL_CANVAS = (360, 60)
+LABEL_FONT = 40
+LABEL_AT = (8, 30)            # left-middle anchor
 
-STATUS_CANVAS = (620, 60)
-STATUS_FONT = 34
-STATUS_AT = (6, 30)
+GLYPH_CANVAS = (48, 64)
+GLYPH_FONT = 50
+GLYPH_BASELINE = 52           # y of the baseline inside the cell
 
-GLYPH_CANVAS = (40, 64)
-GLYPH_FONT = 52
-GLYPH_BASELINE = 50  # y of the baseline inside the cell
+TITLE_CANVAS = (620, 84)
+TITLE_FONT = 54
+TITLE_AT = (8, 42)
+TITLE = ("title", "Redmi Watch 4 PoC")
 
-# Value character set -> file stem. Keep in sync with GMAP in index.ux.
-GLYPHS = {
-    "0": "g_0", "1": "g_1", "2": "g_2", "3": "g_3", "4": "g_4",
-    "5": "g_5", "6": "g_6", "7": "g_7", "8": "g_8", "9": "g_9",
-    ".": "g_dot", "-": "g_dash", "\u00b0": "g_deg", "'": "g_min",
-    '"': "g_sec", ":": "g_colon", "/": "g_slash",
-    "(": "g_lpar", ")": "g_rpar", "+": "g_plus", "\u00b1": "g_pm",
-    " ": "g_sp",
-    "m": "g_m", "s": "g_s", "k": "g_k", "h": "g_h",
-    "K": "g_K", "G": "g_G", "D": "g_D", "B": "g_B",
-}
+# ---- character set for the glyph atlas ----
+# Exactly what the clock screen can render: digits, separators and "UTC".
+CHARS = list("0123456789.-:+UTC")
 
 LABELS = [
-    ("lbl_enlem", "Enlem"),
-    ("lbl_boylam", "Boylam"),
-    ("lbl_irtifa", "\u0130rtifa"),
-    ("lbl_hiz", "H\u0131z"),
-    ("lbl_dogruluk", "Do\u011fruluk"),
-    ("lbl_zaman", "Zaman"),
-]
-
-STATUS = [
-    ("st_uydu", "Uydu Ba\u011flant\u0131s\u0131 Kuruluyor...", AMBER),
-    ("st_araniyor", "Konum Aran\u0131yor...", AMBER),
-    ("st_guclu", "Sinyal G\u00fc\u00e7l\u00fc", GREEN),
-    ("st_desteklenmiyor", "Desteklenmiyor", RED),
-    ("st_zamanasimi", "Zaman A\u015f\u0131m\u0131", RED),
-    ("st_konumkapali", "Konum Kapal\u0131", RED),
-    ("st_sinyalyok", "Sinyal Yok", RED),
+    ("tarih", "Tarih"),
+    ("saat", "Saat"),
+    ("dilim", "Dilim"),
+    ("unix", "Unix"),
 ]
 
 
@@ -112,7 +99,7 @@ def make_text_image(name, text, size, font_size, at, fill):
     _save_verified(name + ".png", img, size)
 
 
-def make_glyph(ch, stem):
+def make_glyph(ch):
     n = (GLYPH_CANVAS[0] * SS, GLYPH_CANVAS[1] * SS)
     img = Image.new("RGBA", n, (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -120,7 +107,7 @@ def make_glyph(ch, stem):
     by = GLYPH_BASELINE * SS
     d.text((cx, by), ch, font=_font(GLYPH_FONT * SS), fill=GREEN, anchor="ms")
     img = img.resize(GLYPH_CANVAS, Image.LANCZOS)
-    _save_verified(stem + ".png", img, GLYPH_CANVAS, allow_blank=(ch == " "))
+    _save_verified("g_%x.png" % ord(ch), img, GLYPH_CANVAS)
 
 
 def make_logo():
@@ -128,25 +115,33 @@ def make_logo():
     N = S * SS
     img = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    cx, cy = N / 2.0, N / 2.0
 
     margin = int(N * 0.02)
     radius = int(N * 0.22)
     d.rounded_rectangle([margin, margin, N - margin, N - margin],
                         radius=radius, fill=BLACK)
 
-    head_center_y = cy - (N * 0.05)
-    head_rad = N * 0.22
-    d.ellipse(
-        [cx - head_rad, head_center_y - head_rad,
-         cx + head_rad, head_center_y + head_rad], fill=WHITE)
-    d.polygon(
-        [(cx - head_rad * 0.78, head_center_y + head_rad * 0.62),
-         (cx + head_rad * 0.78, head_center_y + head_rad * 0.62),
-         (cx, cy + N * 0.22)], fill=WHITE)
-    hole = head_rad * 0.42
-    d.ellipse([cx - hole, head_center_y - hole, cx + hole, head_center_y + hole],
-              fill=DARK_HOLE)
+    cx = N / 2.0
+    body_w = N * 0.50
+    body_h = N * 0.62
+    d.rounded_rectangle([cx - body_w / 2, (N - body_h) / 2,
+                         cx + body_w / 2, (N + body_h) / 2],
+                        radius=N * 0.16, fill=WHITE)
+
+    strap_w = N * 0.20
+    strap_h = N * 0.10
+    d.rounded_rectangle([cx - strap_w / 2, margin + N * 0.03,
+                         cx + strap_w / 2, margin + N * 0.03 + strap_h],
+                        radius=strap_h / 2, fill=WHITE)
+    d.rounded_rectangle([cx - strap_w / 2, N - margin - N * 0.03 - strap_h,
+                         cx + strap_w / 2, N - margin - N * 0.03],
+                        radius=strap_h / 2, fill=WHITE)
+
+    screen_w = body_w * 0.68
+    screen_h = body_h * 0.62
+    d.rounded_rectangle([cx - screen_w / 2, (N - screen_h) / 2,
+                         cx + screen_w / 2, (N + screen_h) / 2],
+                        radius=N * 0.05, fill=GREEN)
 
     out = img.resize((S, S), Image.LANCZOS)
     path = os.path.join(OUT_DIR, "logo.png")
@@ -159,14 +154,12 @@ def make_logo():
 
 def main():
     make_logo()
+    make_text_image(TITLE[0], TITLE[1], TITLE_CANVAS, TITLE_FONT, TITLE_AT, GREEN)
     for stem, text in LABELS:
-        make_text_image(stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
-    for stem, text, color in STATUS:
-        make_text_image(stem, text, STATUS_CANVAS, STATUS_FONT, STATUS_AT, color)
-    for ch, stem in GLYPHS.items():
-        make_glyph(ch, stem)
-    print("generated %d label + %d status + %d glyph images + logo"
-          % (len(LABELS), len(STATUS), len(GLYPHS)))
+        make_text_image("lbl_" + stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
+    for ch in CHARS:
+        make_glyph(ch)
+    print("generated title + %d labels + %d glyphs + logo" % (len(LABELS), len(CHARS)))
 
 
 if __name__ == "__main__":

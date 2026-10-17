@@ -1,245 +1,98 @@
 <template>
   <div class="app">
-    <div class="screen">
-      <div class="row">
-        <image class="lbl" src="/common/txt/lbl_enlem.png"></image>
-        <div class="vals">
-          <div class="vline"><image class="g1" for="{{ latRow }}" src="{{ $item }}"></image></div>
-          <div class="vline"><image class="g2" for="{{ latDmsRow }}" src="{{ $item }}"></image></div>
-        </div>
-      </div>
-      <div class="row">
-        <image class="lbl" src="/common/txt/lbl_boylam.png"></image>
-        <div class="vals">
-          <div class="vline"><image class="g1" for="{{ lonRow }}" src="{{ $item }}"></image></div>
-          <div class="vline"><image class="g2" for="{{ lonDmsRow }}" src="{{ $item }}"></image></div>
-        </div>
-      </div>
-      <div class="row">
-        <image class="lbl" src="/common/txt/lbl_irtifa.png"></image>
-        <div class="vals">
-          <div class="vline"><image class="g1" for="{{ altRow }}" src="{{ $item }}"></image></div>
-        </div>
-      </div>
-      <div class="row">
-        <image class="lbl" src="/common/txt/lbl_hiz.png"></image>
-        <div class="vals">
-          <div class="vline"><image class="g1" for="{{ speedRow }}" src="{{ $item }}"></image></div>
-        </div>
-      </div>
-      <div class="row">
-        <image class="lbl" src="/common/txt/lbl_dogruluk.png"></image>
-        <div class="vals">
-          <div class="vline"><image class="g1" for="{{ accRow }}" src="{{ $item }}"></image></div>
-        </div>
-      </div>
-      <div class="row">
-        <image class="lbl" src="/common/txt/lbl_zaman.png"></image>
-        <div class="vals">
-          <div class="vline"><image class="g1" for="{{ timeRow }}" src="{{ $item }}"></image></div>
-        </div>
-      </div>
-      <div class="srow">
-        <div class="dot" style="background-color:{{ statusColor }};"></div>
-        <image class="stimg" src="{{ statusImg }}"></image>
-      </div>
+    <image class="title" src="/common/txt/title.png"></image>
+    <div class="row">
+      <image class="lbl" src="/common/txt/lbl_tarih.png"></image>
+      <div class="val"><image class="g" for="{{ tarihRow }}" src="{{ $item }}"></image></div>
+    </div>
+    <div class="row">
+      <image class="lbl" src="/common/txt/lbl_saat.png"></image>
+      <div class="val"><image class="g" for="{{ saatRow }}" src="{{ $item }}"></image></div>
+    </div>
+    <div class="row">
+      <image class="lbl" src="/common/txt/lbl_dilim.png"></image>
+      <div class="val"><image class="g" for="{{ dilimRow }}" src="{{ $item }}"></image></div>
+    </div>
+    <div class="row">
+      <image class="lbl" src="/common/txt/lbl_unix.png"></image>
+      <div class="val"><image class="g" for="{{ unixRow }}" src="{{ $item }}"></image></div>
     </div>
   </div>
 </template>
 
 <script>
-import geolocation from '@system.geolocation'
-import brightness from '@system.brightness'
+// Minimal time PoC.
+//
+// Shows only data every Vela quick app can read everywhere: the device clock.
+//   Tarih  - local date            e.g. 2026-10-18
+//   Saat   - local time            e.g. 14:23:05
+//   Dilim  - UTC offset            e.g. UTC+03:00
+//   Unix   - unix timestamp (s)    e.g. 1760797385
+//
+// Text is image-based: the Redmi Watch 4 runtime cannot draw <text> glyphs, so
+// every string is composed from pre-rendered glyph PNGs (scripts/gen_assets.py)
+// via the `for` directive, one <image> per character.
 
-// The Redmi Watch 4 runtime cannot draw text glyphs (verified on device), so
-// every visible string is a pre-rendered PNG (scripts/gen_assets.py). Dynamic
-// values are composed from a monospace glyph atlas via the `for` directive.
-const GMAP = {
-  '0': 'g_0', '1': 'g_1', '2': 'g_2', '3': 'g_3', '4': 'g_4',
-  '5': 'g_5', '6': 'g_6', '7': 'g_7', '8': 'g_8', '9': 'g_9',
-  '.': 'g_dot', '-': 'g_dash', '\u00b0': 'g_deg', "'": 'g_min',
-  '"': 'g_sec', ':': 'g_colon', '/': 'g_slash',
-  '(': 'g_lpar', ')': 'g_rpar', '+': 'g_plus', '\u00b1': 'g_pm',
-  ' ': 'g_sp',
-  'm': 'g_m', 's': 'g_s', 'k': 'g_k', 'h': 'g_h',
-  'K': 'g_K', 'G': 'g_G', 'D': 'g_D', 'B': 'g_B'
-}
-
-function toRow(s) {
+function glyphs(s) {
   const out = []
-  const str = (s === null || s === undefined) ? '' : String(s)
+  const str = String(s)
   for (let i = 0; i < str.length; i++) {
-    const stem = GMAP[str.charAt(i)]
-    if (stem) out.push('/common/txt/' + stem + '.png')
+    out.push('/common/txt/g_' + str.charCodeAt(i).toString(16) + '.png')
   }
   return out
 }
 
-function statusImage(state) {
-  if (state === 'ok') return '/common/txt/st_guclu.png'
-  if (state === 'searching') return '/common/txt/st_uydu.png'
-  if (state === 'locating') return '/common/txt/st_araniyor.png'
-  if (state === 'unsupported') return '/common/txt/st_desteklenmiyor.png'
-  if (state === 'timeout') return '/common/txt/st_zamanasimi.png'
-  if (state === 'off') return '/common/txt/st_konumkapali.png'
-  return '/common/txt/st_sinyalyok.png'
-}
-
-function statusDotColor(state) {
-  if (state === 'ok') return '#00C853'
-  if (state === 'searching' || state === 'locating') return '#FFD600'
-  return '#CF6679'
+function pad2(n) {
+  return n < 10 ? '0' + n : '' + n
 }
 
 export default {
   private: {
-    latRow: toRow('--'),
-    lonRow: toRow('--'),
-    latDmsRow: toRow(''),
-    lonDmsRow: toRow(''),
-    altRow: toRow('--'),
-    speedRow: toRow('--'),
-    accRow: toRow('--'),
-    timeRow: toRow('--'),
-    statusImg: statusImage('searching'),
-    statusColor: statusDotColor('searching')
+    tarihRow: [],
+    saatRow: [],
+    dilimRow: [],
+    unixRow: []
   },
 
   onInit() {
-    this._geoActive = false
-    this._geoUnsupported = false
-    this._simTimer = null
+    this._timer = null
+    this._tick()
   },
 
   onShow() {
-    this._setKeepScreenOn(true)
-    this._startLocation()
+    this._tick()
+    if (!this._timer) {
+      this._timer = setInterval(() => this._tick(), 1000)
+    }
   },
 
   onHide() {
-    this._stopLocation()
-    this._setKeepScreenOn(false)
+    this._stopTimer()
   },
 
   onDestroy() {
-    this._stopLocation()
-    this._setKeepScreenOn(false)
+    this._stopTimer()
   },
 
-  // ------------------------------------------------------------- status
-  _setStatus(state) {
-    this.statusImg = statusImage(state)
-    this.statusColor = statusDotColor(state)
-  },
-
-  // --------------------------------------------------------- geolocation
-  _startLocation() {
-    if (this._geoActive || this._geoUnsupported) return
-    const hasSubscribe = geolocation && typeof geolocation.subscribe === 'function'
-    const hasGet = geolocation && typeof geolocation.getLocation === 'function'
-    if (!hasSubscribe && !hasGet) {
-      this._geoFail(203)
-      return
-    }
-    this._geoActive = true
-    this._setStatus('locating')
-    try {
-      if (hasGet) {
-        geolocation.getLocation({
-          timeout: 15000,
-          success: (res) => this._onGeo(res),
-          fail: (data, code) => this._geoFail(code),
-          complete: () => {}
-        })
-      }
-      if (hasSubscribe) {
-        geolocation.subscribe({
-          callback: (res) => this._onGeo(res),
-          fail: (data, code) => this._geoFail(code)
-        })
-      }
-    } catch (err) {
-      this._geoFail(203)
+  _stopTimer() {
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
     }
   },
 
-  _stopLocation() {
-    if (!this._geoActive) return
-    this._geoActive = false
-    try {
-      if (geolocation && typeof geolocation.unsubscribe === 'function') {
-        geolocation.unsubscribe()
-      }
-    } catch (err) {}
-  },
-
-  _onGeo(res) {
-    try {
-      if (!res) return
-      const lat = res.latitude
-      const lon = res.longitude
-      if (typeof lat !== 'number' || typeof lon !== 'number') return
-
-      this.latRow = toRow(lat.toFixed(5) + '\u00b0')
-      this.lonRow = toRow(lon.toFixed(5) + '\u00b0')
-      this.latDmsRow = toRow(this._dms(lat, true))
-      this.lonDmsRow = toRow(this._dms(lon, false))
-
-      const alt = (typeof res.altitude === 'number') ? Math.round(res.altitude) + ' m' : '--'
-      this.altRow = toRow(alt)
-      const speed = (typeof res.speed === 'number') ? res.speed : 0
-      this.speedRow = toRow(speed.toFixed(1) + ' m/s (' + (speed * 3.6).toFixed(1) + ' km/h)')
-      this.accRow = toRow('\u00b1 ' + (typeof res.accuracy === 'number' ? res.accuracy.toFixed(1) : '--') + ' m')
-      this.timeRow = toRow(this._clock(new Date()))
-
-      this._setStatus('ok')
-    } catch (err) {}
-  },
-
-  _geoFail(code) {
-    const c = Number(code)
-    if (c === 203) {
-      this._geoUnsupported = true
-      this._setStatus('unsupported')
-    } else if (c === 204) {
-      this._setStatus('timeout')
-    } else if (c >= 1000) {
-      this._setStatus('off')
-    } else {
-      this._setStatus('nosignal')
-    }
-  },
-
-  // ------------------------------------------------------------ brightness
-  _setKeepScreenOn(on) {
-    try {
-      if (brightness && typeof brightness.setKeepScreenOn === 'function') {
-        brightness.setKeepScreenOn({
-          keepScreenOn: !!on,
-          success: () => {},
-          fail: () => {}
-        })
-      }
-    } catch (err) {}
-  },
-
-  // ---------------------------------------------------------- pure helpers
-  _dms(deg, isLat) {
-    const abs = Math.abs(deg)
-    const d = Math.floor(abs)
-    const mFloat = (abs - d) * 60
-    const m = Math.floor(mFloat)
-    const s = ((mFloat - m) * 60).toFixed(1)
-    const hemi = isLat ? (deg >= 0 ? 'K' : 'G') : (deg >= 0 ? 'D' : 'B')
-    return d + '\u00b0 ' + this._pad2(m) + "' " + s + '" ' + hemi
-  },
-
-  _pad2(n) {
-    return n < 10 ? '0' + n : '' + n
-  },
-
-  _clock(date) {
-    return this._pad2(date.getHours()) + ':' + this._pad2(date.getMinutes()) + ':' + this._pad2(date.getSeconds())
+  _tick() {
+    const d = new Date()
+    this.tarihRow = glyphs(d.getFullYear() + '-' +
+      pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()))
+    this.saatRow = glyphs(pad2(d.getHours()) + ':' +
+      pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()))
+    const mins = -d.getTimezoneOffset()
+    const sign = mins < 0 ? '-' : '+'
+    const abs = Math.abs(mins)
+    this.dilimRow = glyphs('UTC' + sign +
+      pad2(Math.floor(abs / 60)) + ':' + pad2(abs % 60))
+    this.unixRow = glyphs(Math.floor(d.getTime() / 1000))
   }
 }
 </script>
@@ -248,79 +101,45 @@ export default {
 .app {
   width: 390px;
   height: 450px;
-  background-color: #000000;
-}
-
-.screen {
-  width: 390px;
-  height: 450px;
-  padding: 14px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
+  padding-left: 16px;
+  padding-top: 14px;
   background-color: #000000;
+}
+
+.title {
+  width: 310px;
+  height: 42px;
+  margin-left: 4px;
+  margin-bottom: 18px;
 }
 
 .row {
   width: 360px;
-  height: 56px;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: flex-start;
-  margin-bottom: 3px;
+  margin-bottom: 16px;
 }
 
 .lbl {
-  width: 116px;
-  height: 30px;
-  margin-left: 6px;
-  margin-right: 6px;
+  width: 150px;
+  height: 25px;
+  margin-left: 4px;
 }
 
-.vals {
-  width: 228px;
-  height: 52px;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.vline {
-  width: 228px;
-  height: 24px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.g1 {
-  width: 14px;
-  height: 22px;
-}
-
-.g2 {
-  width: 10px;
-  height: 16px;
-}
-
-.srow {
-  width: 360px;
-  height: 34px;
-  margin-top: 6px;
+.val {
+  width: 348px;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+  margin-left: 4px;
 }
 
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 6px;
-  margin-right: 8px;
-}
-
-.stimg {
-  width: 296px;
-  height: 30px;
+.g {
+  width: 16px;
+  height: 22px;
 }
 </style>
