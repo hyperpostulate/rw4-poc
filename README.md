@@ -134,7 +134,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # default string bundle
 │   ├── common/
-│   │   ├── logo.png           # launcher icon: watch motif (white body, green screen), 192x192
+│   │   ├── logo.png           # launcher icon: watch motif (white body, green screen), 96x96 (slot-width test)
 │   │   └── txt/               # generated PNG text: labels, title and the glyph atlas (g_<hex>.png)
 │   └── pages/
 │       └── index/
@@ -419,7 +419,7 @@ redmi-watch4-compass/
 │   ├── i18n/
 │   │   └── defaults.json      # varsayılan metin paketi
 │   ├── common/
-│   │   ├── logo.png           # başlatıcı simgesi: saat motifi (beyaz gövde, yeşil ekran), 192x192
+│   │   ├── logo.png           # başlatıcı simgesi: saat motifi (beyaz gövde, yeşil ekran), 96x96 (alan genişliği denemesi)
 │   │   └── txt/               # üretilen PNG metinler: etiketler, başlık ve glif atlası (g_<hex>.png)
 │   └── pages/
 │       └── index/

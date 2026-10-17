@@ -53,6 +53,12 @@ GLYPH_CANVAS = (48, 64)
 GLYPH_FONT = 50
 GLYPH_BASELINE = 52           # y of the baseline inside the cell
 
+# Launcher icon size in px. The Vela docs ask for 192x192, but the Redmi Watch
+# 4 launcher appears to reserve a wide icon slot before the app name; this is a
+# deliberate experiment to see whether the slot width (and therefore the label
+# x position) is derived from the image's pixel dimensions.
+LOGO_SIZE = 96
+
 TITLE_CANVAS = (620, 84)
 TITLE_FONT = 54
 TITLE_AT = (8, 42)
@@ -113,7 +119,7 @@ def make_logo():
     screen. On the launcher's dark background the black disc is effectively
     invisible, so what reads is a white watch with a green screen -- the icon
     this app has always shipped."""
-    size = (192, 192)
+    size = (LOGO_SIZE, LOGO_SIZE)
     n = size[0] * SS
     img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
