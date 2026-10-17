@@ -4,7 +4,32 @@
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
 
-A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4. One screen, black background, green values, four fields read from the device clock:
+A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4. The project began as a GPS/compass idea, but the watch exposes **no GNSS or health API** to third-party apps, so GPS is impossible on this device (see [On-device findings](#on-device-findings)). What ships instead is a **platform PoC**: the smallest useful app — a clock — that documents what a Vela quick app can and cannot do here.
+
+* * *
+
+## Table of Contents
+
+- [What this is](#what-this-is)
+- [What it shows](#what-it-shows)
+- [Install on the Watch](#install-on-the-watch)
+- [Build & Run](#build--run)
+- [Project Structure](#project-structure)
+- [On-device findings](#on-device-findings)
+- [Limitations](#limitations)
+- [License](#license)
+- [Developer](#developer)
+- [Contributing](#contributing)
+
+* * *
+
+## What this is
+
+The repository started as a GPS/compass experiment; on-device testing proved a GPS quick app cannot exist on the Redmi Watch 4, so it became a platform PoC instead. It is deliberately tiny: one screen, no permissions, and a written record of what a third-party Vela quick app can actually do.
+
+## What it shows
+
+One screen — black background, green values — with exactly four fields read from the device clock:
 
 | Field | Meaning | Example |
 | :-- | :-- | :-- |
@@ -13,188 +38,11 @@ A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4. One screen, b
 | **Dilim** | UTC offset | `UTC+03:00` |
 | **Unix** | Unix timestamp (seconds) | `1760797385` |
 
-The app is deliberately tiny. Its real value is documenting **what a third-party quick app can and cannot do on the Redmi Watch 4**, which was verified on real hardware — see [On-device findings](#on-device-findings).
-
-* * *
-
-## Table of Contents
-
-- [On-device findings](#on-device-findings)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Build & Run](#build--run)
-- [Project Structure](#project-structure)
-- [Screen & Features](#screen--features)
-- [Installing on the Watch](#installing-on-the-watch)
-- [Documentation](#documentation)
-- [Known Limitations & Risks](#known-limitations--risks)
-- [Verification](#verification)
-- [License](#license)
-- [Developer](#developer)
-- [Contributing](#contributing)
-
-* * *
-
-## On-device findings
-
-Everything below was verified on a **real Redmi Watch 4**; the official Xiaomi Vela support tables agree.
-
-### Text does not render
-
-- `<text>`, `<span>` and native widgets (`<input type="button">`, `<input type="text">`) paint **no readable glyphs** on this unit (nothing, or notdef "tofu" boxes). A bundled `@font-face` font had zero effect.
-- `<image>`, `<div>`, `background-color`, `<style>`/`class` all render correctly.
-- **Consequence:** every visible string in this app is a **pre-rendered PNG**. Static labels are single images; dynamic values are composed character-by-character from a monospace **glyph atlas** (`src/common/txt/g_<hex>.png`, one PNG per codepoint) using the `for` directive. `scripts/gen_assets.py` generates all of them deterministically.
-
-### Which system APIs actually work
-
-| API | Redmi Watch 4 |
-| :-- | :-- |
-| `@system.geolocation` (GPS) | ❌ not supported (error `203`) |
-| `@system.sensor` (accelerometer / pressure / compass) | ❌ not supported |
-| `@system.battery` (level) | ❌ not supported |
-| `@system.network` | ❌ not supported |
-| `@system.bluetooth`, `@system.record`, `@system.fetch`, `@system.crypto` | ❌ not supported |
-| `@system.device` (`getInfo`, storage sizes) | ✅ works |
-| `@system.storage` (local key/value) | ✅ works |
-| `@system.brightness` | ✅ works |
-| `@system.app` | ✅ works |
-| `vibrator.vibrate()` | ✅ the only supported entry in the vibrator table |
-| JS clock (`new Date()`) | ✅ always available |
-
-There is **no GNSS sensor API** in Vela and **no step/heart-rate/health API** exposed to quick apps at all. The watch's GNSS hardware is reserved for Xiaomi's native apps, so a GPS/location quick app is impossible on this device. That is why this repository ships a clock PoC (the one live data every Vela quick app can read).
-
-> `203` is the Vela system code for *"this function is not supported"* (a permission problem would be `400`/`402`). It is not recoverable by the app.
-
-### Launcher icon size moves the app name
-
-- The launcher reserves a slot to the left of the app name, and that slot's **width follows the icon PNG's pixel size** — so the icon also decides where the label starts.
-- Verified on device: a **`192x192`** icon (the size the Vela docs recommend) pushed the app name to the *middle* of the row, while shrinking the icon to **`96x96`** pulled the name back to its normal position.
-- No manifest field controls the label's position, alignment or size (`name` is the only label input), so the icon is the only lever. Shipping a **`96x96`** `logo.png` is therefore deliberate, not an accident.
-
-* * *
-
-## Requirements
-
-Requirement
-
-Version / Notes
-
-Node.js
-
-18+ (tested on v24.12.0)
-
-npm
-
-9+ (tested on 11.6.2)
-
-Python 3 + Pillow
-
-Only needed to regenerate the PNG assets (`scripts/gen_assets.py`)
-
-Android phone
-
-Only needed to install the `.rpk` onto the watch via **Notify for Xiaomi** (see [Installing on the Watch](#installing-on-the-watch))
-
-`aiot-toolkit`
-
-Pulled in automatically as a dev dependency (`npm install`)
-
-* * *
-
-## Installation
-
-### Manual Build
-
-```
-git clone https://github.com/hyperpostulate/redmi-watch4-compass.git
-cd redmi-watch4-compass
-npm install
-npm run build
-```
-
-The build produces `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`.
-
-* * *
-
-## Build & Run
-
-```
-npm install                          # Install the aiot-toolkit toolchain
-npm run build                        # Build a debug .rpk into dist/
-npm run release                      # Build a release .rpk (requires signing keys)
-npm run start                        # aiot start --watch (live development)
-python3 scripts/gen_assets.py        # Regenerate the PNG assets from code
-```
-
-The toolchain is `aiot-toolkit` (`aiot build` / `aiot release` / `aiot start`). The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL). Deployment to the watch itself is described in [Installing on the Watch](#installing-on-the-watch).
-
-* * *
-
-## Project Structure
-
-```
-redmi-watch4-compass/
-├── src/
-│   ├── manifest.json          # package com.hyperpostulate.rw4poc, name "RW4 - PoC", designWidth 390
-│   ├── app.ux                 # app entry (onCreate/onDestroy)
-│   ├── i18n/
-│   │   └── defaults.json      # default string bundle
-│   ├── common/
-│   │   ├── logo.png           # launcher icon: watch motif, 96x96 (see On-device findings: icon size moves the app name)
-│   │   └── txt/               # generated PNG text: labels, title and the glyph atlas (g_<hex>.png)
-│   └── pages/
-│       └── index/
-│           └── index.ux       # the whole app: title + 4 rows + clock logic
-├── scripts/
-│   ├── gen_assets.py          # reproducible Pillow generator for every PNG asset
-│   └── assets/
-│       └── gpsinfo.ttf        # font used only at generation time (not shipped)
-├── docs/
-│   └── design.md              # UI/UX design specification (Turkish)
-├── dist/                      # build output (.rpk) - gitignored
-├── build/                     # intermediate build output - gitignored
-├── package.json
-└── README.md
-```
-
-### Core Files
-
-File
-
-Purpose
-
-`src/manifest.json`
-
-Vela app manifest: `package` = `com.hyperpostulate.rw4poc`, `name` = `RW4 - PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the PoC uses no other system API)
-
-`src/pages/index/index.ux`
-
-The whole app: template (title + four label/value rows), script (clock formatting + glyph mapping) and styles
-
-`scripts/gen_assets.py`
-
-Generates the title, the labels, the glyph atlas and the launcher icon (a 96x96 watch motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images)
-
-`docs/design.md`
-
-The authoritative UI/UX spec (palette, geometry, text-as-image approach)
-
-* * *
-
-## Screen & Features
-
-The app has a **single screen**. A one-second interval keeps the clock fresh; it starts on page show and stops on page hide to save battery. All values are green on a black background.
-
-- **Tarih** — local date, `YYYY-AA-GG`.
-- **Saat** — local time, `SS:DD:SS`, updated every second.
-- **Dilim** — UTC offset derived from `Date.getTimezoneOffset()`, e.g. `UTC+03:00`.
-- **Unix** — `Math.floor(Date.now() / 1000)`, the device time as a Unix timestamp.
-
 No permission is requested: the JS clock needs none.
 
 * * *
 
-## Installing on the Watch
+## Install on the Watch
 
 The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** app (Google Play listing "Notify for Xiaomi/Mi Band 8-10", package `com.mc.xiaomi1`, by OneZeroBit). The Redmi Watch 4 is on the app's official compatibility list, and the app's official site documents installing custom VelaJS (`.rpk`) apps this way.
 
@@ -228,39 +76,94 @@ Sources: [Notify for Xiaomi VelaJS install guide](https://mibandnotify.com/xiaom
 
 * * *
 
-## Documentation
+## Build & Run
 
-Document
+Requirements:
 
-Contents
-
-[docs/design.md](docs/design.md)
-
-UI/UX specification: palette, geometry, the text-as-image approach, glyph atlas rules
-
-* * *
-
-## Known Limitations & Risks
-
-- **No GPS/location is possible** on the Redmi Watch 4 from a quick app (see [On-device findings](#on-device-findings)). This repository is a platform PoC, not a GPS app.
-- **Text must be images.** Adding new *dynamic* strings requires extending the glyph atlas in `scripts/gen_assets.py` (add the characters to `CHARS`) and rebuilding; characters outside the atlas render as `?`.
-- **Symbolic links / large glyph sets slow the app down.** Drawing hundreds of `<image>` elements noticeably slows the screen; keep the number of on-screen glyph images small.
-- **`npm audit` reports vulnerabilities in transitive dev dependencies** of `aiot-toolkit`. They are build-time only and do not ship inside the `.rpk`.
-
-* * *
-
-## Verification
+| Requirement | Version / Notes |
+| :-- | :-- |
+| Node.js | 18+ (tested on v24.12.0) |
+| npm | 9+ (tested on 11.6.2) |
+| Python 3 + Pillow | Only needed to regenerate the PNG assets (`scripts/gen_assets.py`) |
+| Android phone | Only needed to install the `.rpk` onto the watch via **Notify for Xiaomi** (see [Install on the Watch](#install-on-the-watch)) |
+| `aiot-toolkit` | Pulled in automatically as a dev dependency (`npm install`) |
 
 ```
-npm run build                        # must succeed and emit dist/*.rpk
-python3 scripts/gen_assets.py        # regenerates and self-checks the PNG assets
+git clone https://github.com/hyperpostulate/redmi-watch4-compass.git
+cd redmi-watch4-compass
+npm install                          # Install the aiot-toolkit toolchain
+npm run build                        # Build a debug .rpk into dist/
+npm run release                      # Build a release .rpk (requires signing keys)
+npm run start                        # aiot start --watch (live development)
+python3 scripts/gen_assets.py        # Regenerate the PNG assets from code
 ```
 
-On-device checklist:
+The toolchain is `aiot-toolkit`. Every text asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
+
+On-device verification checklist:
 
 1. Do the four values (Tarih, Saat, Dilim, Unix) render and match the phone?
 2. Does `Saat` advance every second?
 3. Is the app responsive (no visible lag)?
+
+* * *
+
+## Project Structure
+
+```
+redmi-watch4-compass/
+├── src/
+│   ├── manifest.json          # package com.hyperpostulate.rw4poc, name "RW4 - PoC", designWidth 390
+│   ├── app.ux                 # app entry (onCreate/onDestroy)
+│   ├── common/
+│   │   ├── logo.png           # launcher icon: watch motif, 96x96 (see On-device findings: icon size moves the app name)
+│   │   └── txt/               # generated PNG text: labels, title and the glyph atlas (g_<hex>.png)
+│   └── pages/
+│       └── index/
+│           └── index.ux       # the whole app: title + 4 rows + clock logic
+├── scripts/
+│   ├── gen_assets.py          # reproducible Pillow generator for every PNG asset
+│   └── assets/
+│       └── ui-subset.ttf      # font used only at generation time (not shipped)
+├── docs/
+│   ├── design.md              # UI/UX design specification (Turkish)
+│   └── findings.md            # bilingual on-device findings
+├── dist/                      # build output (.rpk) - gitignored
+├── build/                     # intermediate build output - gitignored
+├── package.json
+└── README.md
+```
+
+### Core Files
+
+| File | Purpose |
+| :-- | :-- |
+| `src/manifest.json` | Vela app manifest: `package` = `com.hyperpostulate.rw4poc`, `name` = `RW4 - PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the PoC uses no other system API) |
+| `src/pages/index/index.ux` | The whole app: template (title + four label/value rows), script (clock formatting + glyph mapping) and styles |
+| `scripts/gen_assets.py` | Generates the title, the labels, the glyph atlas and the launcher icon (a 96x96 watch motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images) |
+| `docs/design.md` | The authoritative UI/UX spec (palette, geometry, text-as-image approach) |
+| `docs/findings.md` | Full bilingual write-up of the on-device findings |
+
+* * *
+
+## On-device findings
+
+Verified on a **real Redmi Watch 4**. Full detail — including the complete system-API table — is in **[docs/findings.md](docs/findings.md)**.
+
+- **Text does not render.** `<text>`/`<span>`/`<input>` paint no readable glyphs and a bundled `@font-face` has no effect, so every visible string is a pre-rendered PNG (static labels as single images; dynamic values composed from a glyph atlas).
+- **Which system APIs work.** `@system.device`, `@system.storage`, `@system.brightness`, `@system.app`, `vibrator.vibrate()` and the JS clock work; geolocation (GPS, error `203`), sensor, battery, network, bluetooth, record, fetch and crypto do not.
+- **No GNSS or health API** is exposed to quick apps, so a GPS/location quick app is impossible on this device.
+- **`203`** is Vela's *"function not supported"* code (a permission problem would be `400`/`402`); it is not recoverable by the app.
+- **Launcher icon size moves the app name.** The launcher reserves a slot whose width follows the icon PNG's pixel size, so the icon also sets where the label starts — and no manifest field controls label position. The **96x96** `logo.png` is deliberate: `192x192` pushed the app name to the middle of the row, while `96x96` kept it in its normal position.
+
+* * *
+
+## Limitations
+
+- **No GPS/location is possible** on the Redmi Watch 4 from a quick app (see [On-device findings](#on-device-findings)). This repository is a platform PoC, not a GPS app.
+- **Text must be images.** Adding new *dynamic* strings requires extending the glyph atlas in `scripts/gen_assets.py` (add the characters to `CHARS`) and rebuilding; characters outside the atlas render as `?`.
+- **Many glyph images slow the app down.** Drawing hundreds of `<image>` elements noticeably slows the screen; keep the number of on-screen glyph images small.
+- **`npm audit` reports vulnerabilities in transitive dev dependencies** of `aiot-toolkit`. They are build-time only and do not ship inside the `.rpk`.
 
 * * *
 
@@ -295,7 +198,32 @@ No license file is currently included in this repository. Until one is added, al
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
 
-Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`). Tek ekran, siyah arka plan, yeşil değerler; cihaz saatinden okunan dört alan:
+Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`). Proje bir GPS/pusula fikri olarak başladı; ancak saat, üçüncü taraf uygulamalara **GNSS veya sağlık API'si sunmaz**, dolayısıyla bu cihazda GPS imkânsızdır (bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular)). Bunun yerine gelen şey bir **platform PoC**'sidir: burada bir Vela hızlı uygulamasının neleri yapabildiğini belgeleyen en küçük kullanışlı uygulama — bir saat.
+
+* * *
+
+## İçindekiler
+
+- [Bu nedir](#bu-nedir)
+- [Ne gösterir](#ne-gösterir)
+- [Saate Kurulum](#saate-kurulum)
+- [Derleme ve Çalıştırma](#derleme-ve-çalıştırma)
+- [Proje Yapısı](#proje-yapısı)
+- [Cihaz üstü bulgular](#cihaz-üstü-bulgular)
+- [Sınırlamalar](#sınırlamalar)
+- [Lisans](#lisans)
+- [Geliştirici](#geliştirici)
+- [Katkıda Bulunma](#katkıda-bulunma)
+
+* * *
+
+## Bu nedir
+
+Depo bir GPS/pusula denemesi olarak başladı; cihaz üstü testler Redmi Watch 4'te bir GPS hızlı uygulamasının var olamayacağını gösterdi, bu yüzden bir platform PoC'sine dönüştü. Bilinçli olarak çok küçüktür: tek ekran, izin yok ve bir üçüncü taraf Vela hızlı uygulamasının gerçekte neleri yapabildiğinin yazılı kaydı.
+
+## Ne gösterir
+
+Tek ekran — siyah arka plan, yeşil değerler — cihaz saatinden okunan tam olarak dört alan:
 
 | Alan | Anlamı | Örnek |
 | :-- | :-- | :-- |
@@ -303,183 +231,6 @@ Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`). Tek
 | **Saat** | Yerel saat (her saniye güncellenir) | `14:23:05` |
 | **Dilim** | UTC farkı | `UTC+03:00` |
 | **Unix** | Unix zaman damgası (saniye) | `1760797385` |
-
-Uygulama bilinçli olarak çok küçüktür. Asıl değeri, bir üçüncü taraf hızlı uygulamanın **Redmi Watch 4'te neleri yapabildiğini/yapamadığını** gerçek donanımda belgelemesidir — bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular).
-
-* * *
-
-## İçindekiler
-
-- [Cihaz üstü bulgular](#cihaz-üstü-bulgular)
-- [Gereksinimler](#gereksinimler)
-- [Kurulum](#kurulum)
-- [Derleme ve Çalıştırma](#derleme-ve-çalıştırma)
-- [Proje Yapısı](#proje-yapısı)
-- [Ekran ve Özellikler](#ekran-ve-özellikler)
-- [Saate Kurulum](#saate-kurulum)
-- [Belgeler](#belgeler)
-- [Bilinen Sınırlamalar ve Riskler](#bilinen-sınırlamalar-ve-riskler)
-- [Doğrulama](#doğrulama)
-- [Lisans](#lisans)
-- [Geliştirici](#geliştirici)
-- [Katkıda Bulunma](#katkıda-bulunma)
-
-* * *
-
-## Cihaz üstü bulgular
-
-Aşağıdaki her şey **gerçek bir Redmi Watch 4** üzerinde doğrulandı; resmî Xiaomi Vela destek tabloları da bunu doğruluyor.
-
-### Metin çizilmiyor
-
-- `<text>`, `<span>` ve yerel widget'lar (`<input type="button">`, `<input type="text">`) bu cihazda **okunabilir glif çizmiyor** (hiçbir şey ya da notdef "tofu" kutuları). Paketlenen bir `@font-face` fontunun hiçbir etkisi olmadı.
-- `<image>`, `<div>`, `background-color`, `<style>`/`class` düzgün çalışıyor.
-- **Sonuç:** bu uygulamadaki her görünür yazı **önceden üretilmiş PNG**'dir. Statik etiketler tek görseldir; dinamik değerler ise tek aralıklı (monospace) bir **glif atlasından** (`src/common/txt/g_<hex>.png`, her kod noktası için bir PNG) karakter karakter `for` yönergesiyle dizilir. Tümünü `scripts/gen_assets.py` belirlenimci biçimde üretir.
-
-### Hangi sistem API'leri gerçekten çalışıyor
-
-| API | Redmi Watch 4 |
-| :-- | :-- |
-| `@system.geolocation` (GPS) | ❌ desteklenmiyor (hata `203`) |
-| `@system.sensor` (ivmeölçer / basınç / pusula) | ❌ desteklenmiyor |
-| `@system.battery` (pil) | ❌ desteklenmiyor |
-| `@system.network` | ❌ desteklenmiyor |
-| `@system.bluetooth`, `@system.record`, `@system.fetch`, `@system.crypto` | ❌ desteklenmiyor |
-| `@system.device` (`getInfo`, depolama boyutları) | ✅ çalışıyor |
-| `@system.storage` (yerel anahtar/değer) | ✅ çalışıyor |
-| `@system.brightness` | ✅ çalışıyor |
-| `@system.app` | ✅ çalışıyor |
-| `vibrator.vibrate()` | ✅ titreşim tablosundaki tek destekli giriş |
-| JS saati (`new Date()`) | ✅ her zaman kullanılabilir |
-
-Vela'da **GNSS sensör API'si yoktur** ve hızlı uygulamalara açık **adım/nabız/sağlık API'si hiç yoktur**. Saatin GNSS donanımı Xiaomi'nin yerleşik uygulamalarına ayrılmıştır; dolayısıyla bu cihazda bir GPS/konum hızlı uygulaması imkânsızdır. Bu depo bu yüzden bir saat PoC'si içerir (her Vela hızlı uygulamasının okuyabildiği tek canlı veri).
-
-> `203`, Vela'nın *"bu işlev desteklenmiyor"* sistem kodudur (izin sorunu olsaydı `400`/`402` olurdu). Uygulama tarafından giderilemez.
-
-### Başlatıcı simge boyutu, uygulama ismini kaydırır
-
-- Başlatıcı, uygulama isminin solunda bir alan ayırır ve bu alanın **genişliği simge PNG'sinin piksel boyutunu izler** — yani ismin nereden başlayacağını da simge belirler.
-- Cihazda doğrulandı: **`192x192`** simge (Vela dokümanlarının önerdiği boyut) uygulama ismini satırın *ortasına* itti; simgeyi **`96x96`**'ya küçültmek ismi normal konumuna geri getirdi.
-- İsmin konumunu, hizasını veya boyutunu kontrol eden bir manifest alanı yoktur (`name` tek etiket girdisidir); tek kaldıraç simgedir. Bu yüzden **`96x96`** `logo.png` bilinçlidir, tesadüf değildir.
-
-* * *
-
-## Gereksinimler
-
-Gereksinim
-
-Sürüm / Not
-
-Node.js
-
-18+ (v24.12.0 ile test edildi)
-
-npm
-
-9+ (11.6.2 ile test edildi)
-
-Python 3 + Pillow
-
-Yalnızca PNG varlıklarını yeniden üretmek için gerekir (`scripts/gen_assets.py`)
-
-Android telefon
-
-Yalnızca `.rpk` dosyasını **Notify for Xiaomi** ile saate kurmak için gerekir (bkz. [Saate Kurulum](#saate-kurulum))
-
-`aiot-toolkit`
-
-`npm install` ile geliştirme bağımlılığı olarak otomatik gelir
-
-* * *
-
-## Kurulum
-
-### Manuel Derleme
-
-```
-git clone https://github.com/hyperpostulate/redmi-watch4-compass.git
-cd redmi-watch4-compass
-npm install
-npm run build
-```
-
-Derleme `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk` dosyasını üretir.
-
-* * *
-
-## Derleme ve Çalıştırma
-
-```
-npm install                          # aiot-toolkit araç zincirini kur
-npm run build                        # dist/ içine debug .rpk derle
-npm run release                      # release .rpk derle (imza anahtarları gerekir)
-npm run start                        # aiot start --watch (canlı geliştirme)
-python3 scripts/gen_assets.py        # PNG varlıklarını koddan yeniden üret
-```
-
-Araç zinciri `aiot-toolkit`'tir (`aiot build` / `aiot release` / `aiot start`). Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir). Saate kurulumun kendisi [Saate Kurulum](#saate-kurulum) bölümünde anlatılır.
-
-* * *
-
-## Proje Yapısı
-
-```
-redmi-watch4-compass/
-├── src/
-│   ├── manifest.json          # paket com.hyperpostulate.rw4poc, ad "RW4 - PoC", designWidth 390
-│   ├── app.ux                 # uygulama girişi (onCreate/onDestroy)
-│   ├── i18n/
-│   │   └── defaults.json      # varsayılan metin paketi
-│   ├── common/
-│   │   ├── logo.png           # başlatıcı simgesi: saat motifi, 96x96 (bkz. Cihaz üstü bulgular: simge boyutu ismi kaydırır)
-│   │   └── txt/               # üretilen PNG metinler: etiketler, başlık ve glif atlası (g_<hex>.png)
-│   └── pages/
-│       └── index/
-│           └── index.ux       # uygulamanın tamamı: başlık + 4 satır + saat mantığı
-├── scripts/
-│   ├── gen_assets.py          # her PNG varlığı için tekrarlanabilir Pillow üreteci
-│   └── assets/
-│       └── gpsinfo.ttf        # yalnızca üretim zamanında kullanılan font (pakete girmez)
-├── docs/
-│   └── design.md              # UI/UX tasarım spesifikasyonu
-├── dist/                      # derleme çıktısı (.rpk) - gitignore'da
-├── build/                     # ara derleme çıktısı - gitignore'da
-├── package.json
-└── README.md
-```
-
-### Temel Dosyalar
-
-Dosya
-
-Amaç
-
-`src/manifest.json`
-
-Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4poc`, `name` = `RW4 - PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (PoC başka sistem API'si kullanmaz)
-
-`src/pages/index/index.ux`
-
-Uygulamanın tamamı: şablon (başlık + dört etiket/değer satırı), script (saat biçimlendirme + glif eşleme) ve stiller
-
-`scripts/gen_assets.py`
-
-Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (96x96 saat motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular
-
-`docs/design.md`
-
-Yetkili UI/UX spesifikasyonu (palet, geometri, metin-görsel yaklaşımı)
-
-* * *
-
-## Ekran ve Özellikler
-
-Uygulamanın **tek ekranı** vardır. Bir saniyelik zamanlayıcı saati taze tutar; sayfa gösterildiğinde başlar, gizlendiğinde durur (pil tasarrufu). Tüm değerler siyah arka plan üzerinde yeşildir.
-
-- **Tarih** — yerel tarih, `YYYY-AA-GG`.
-- **Saat** — yerel saat, `SS:DD:SS`, her saniye güncellenir.
-- **Dilim** — `Date.getTimezoneOffset()`'tan türetilen UTC farkı, ör. `UTC+03:00`.
-- **Unix** — `Math.floor(Date.now() / 1000)`, cihaz zamanının Unix zaman damgası.
 
 Hiçbir izin istenmez: JS saati hiçbir izin gerektirmez.
 
@@ -519,39 +270,94 @@ Kaynaklar: [Notify for Xiaomi VelaJS kurulum kılavuzu](https://mibandnotify.com
 
 * * *
 
-## Belgeler
+## Derleme ve Çalıştırma
 
-Belge
+Gereksinimler:
 
-İçerik
-
-[docs/design.md](docs/design.md)
-
-UI/UX spesifikasyonu: palet, geometri, metin-görsel yaklaşımı, glif atlası kuralları
-
-* * *
-
-## Bilinen Sınırlamalar ve Riskler
-
-- **Redmi Watch 4'te GPS/konum bir hızlı uygulamayla mümkün değildir** (bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular)). Bu depo bir GPS uygulaması değil, bir platform PoC'sidir.
-- **Metin görsel olmak zorundadır.** Yeni *dinamik* metin eklemek, `scripts/gen_assets.py` içindeki glif atlasını (`CHARS`'a karakter ekleyerek) genişletmeyi ve yeniden derlemeyi gerektirir; atlas dışındaki karakterler `?` olarak çizilir.
-- **Yüzlerce `<image>` ekranı yavaşlatır.** Çok sayıda glif görseli çizmek ekranı belirgin biçimde yavaşlatır; ekrandaki glif görseli sayısını az tutun.
-- **`npm audit`**, `aiot-toolkit`'in geçişli geliştirme bağımlılıklarında güvenlik açıkları bildirir. Bunlar yalnızca derleme zamanıyla ilgilidir ve `.rpk` paketine dâhil olmaz.
-
-* * *
-
-## Doğrulama
+| Gereksinim | Sürüm / Not |
+| :-- | :-- |
+| Node.js | 18+ (v24.12.0 ile test edildi) |
+| npm | 9+ (11.6.2 ile test edildi) |
+| Python 3 + Pillow | Yalnızca PNG varlıklarını yeniden üretmek için gerekir (`scripts/gen_assets.py`) |
+| Android telefon | Yalnızca `.rpk` dosyasını **Notify for Xiaomi** ile saate kurmak için gerekir (bkz. [Saate Kurulum](#saate-kurulum)) |
+| `aiot-toolkit` | `npm install` ile geliştirme bağımlılığı olarak otomatik gelir |
 
 ```
-npm run build                        # başarılı olmalı ve dist/*.rpk üretmeli
-python3 scripts/gen_assets.py        # PNG varlıklarını yeniden üretip kendi kendini kontrol eder
+git clone https://github.com/hyperpostulate/redmi-watch4-compass.git
+cd redmi-watch4-compass
+npm install                          # aiot-toolkit araç zincirini kur
+npm run build                        # dist/ içine debug .rpk derle
+npm run release                      # release .rpk derle (imza anahtarları gerekir)
+npm run start                        # aiot start --watch (canlı geliştirme)
+python3 scripts/gen_assets.py        # PNG varlıklarını koddan yeniden üret
 ```
+
+Araç zinciri `aiot-toolkit`'tir. Her metin varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk` dosyasını üretir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
 
 Cihaz üstü kontrol listesi:
 
 1. Dört değer (Tarih, Saat, Dilim, Unix) çiziliyor ve telefonla uyuşuyor mu?
 2. `Saat` her saniye ilerliyor mu?
 3. Uygulama akıcı mı (görünür gecikme yok mu)?
+
+* * *
+
+## Proje Yapısı
+
+```
+redmi-watch4-compass/
+├── src/
+│   ├── manifest.json          # paket com.hyperpostulate.rw4poc, ad "RW4 - PoC", designWidth 390
+│   ├── app.ux                 # uygulama girişi (onCreate/onDestroy)
+│   ├── common/
+│   │   ├── logo.png           # başlatıcı simgesi: saat motifi, 96x96 (bkz. Cihaz üstü bulgular: simge boyutu ismi kaydırır)
+│   │   └── txt/               # üretilen PNG metinler: etiketler, başlık ve glif atlası (g_<hex>.png)
+│   └── pages/
+│       └── index/
+│           └── index.ux       # uygulamanın tamamı: başlık + 4 satır + saat mantığı
+├── scripts/
+│   ├── gen_assets.py          # her PNG varlığı için tekrarlanabilir Pillow üreteci
+│   └── assets/
+│       └── ui-subset.ttf      # yalnızca üretim zamanında kullanılan font (pakete girmez)
+├── docs/
+│   ├── design.md              # UI/UX tasarım spesifikasyonu
+│   └── findings.md            # iki dilli cihaz üstü bulgular
+├── dist/                      # derleme çıktısı (.rpk) - gitignore'da
+├── build/                     # ara derleme çıktısı - gitignore'da
+├── package.json
+└── README.md
+```
+
+### Temel Dosyalar
+
+| Dosya | Amaç |
+| :-- | :-- |
+| `src/manifest.json` | Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4poc`, `name` = `RW4 - PoC`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (PoC başka sistem API'si kullanmaz) |
+| `src/pages/index/index.ux` | Uygulamanın tamamı: şablon (başlık + dört etiket/değer satırı), script (saat biçimlendirme + glif eşleme) ve stiller |
+| `scripts/gen_assets.py` | Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (96x96 saat motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular |
+| `docs/design.md` | Yetkili UI/UX spesifikasyonu (palet, geometri, metin-görsel yaklaşımı) |
+| `docs/findings.md` | Cihaz üstü bulguların tam iki dilli yazımı |
+
+* * *
+
+## Cihaz üstü bulgular
+
+**Gerçek bir Redmi Watch 4** üzerinde doğrulandı. Sistem API tablosunun tamamı dâhil ayrıntılar **[docs/findings.md](docs/findings.md)** içinde.
+
+- **Metin çizilmiyor.** `<text>`/`<span>`/`<input>` okunabilir glif çizmiyor ve paketlenen `@font-face` etkisiz; bu yüzden her görünür yazı önceden üretilmiş PNG'dir (statik etiketler tek görsel; dinamik değerler glif atlasından dizilir).
+- **Hangi sistem API'leri çalışıyor.** `@system.device`, `@system.storage`, `@system.brightness`, `@system.app`, `vibrator.vibrate()` ve JS saati çalışıyor; geolocation (GPS, hata `203`), sensor, battery, network, bluetooth, record, fetch ve crypto çalışmıyor.
+- **GNSS veya sağlık API'si** hızlı uygulamalara açık değildir; bu cihazda bir GPS/konum hızlı uygulaması imkânsızdır.
+- **`203`**, Vela'nın *"bu işlev desteklenmiyor"* kodu (izin sorunu olsaydı `400`/`402` olurdu); uygulama tarafından giderilemez.
+- **Başlatıcı simge boyutu uygulama ismini kaydırır.** Başlatıcı, genişliği simge PNG'sinin piksel boyutunu izleyen bir alan ayırır; böylece simge ismin nereden başlayacağını da belirler ve ismi konumlandıran bir manifest alanı yoktur. **96x96** `logo.png` bilinçlidir: `192x192` ismi satırın ortasına iterken `96x96` normal konumunda tuttu.
+
+* * *
+
+## Sınırlamalar
+
+- **Redmi Watch 4'te GPS/konum bir hızlı uygulamayla mümkün değildir** (bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular)). Bu depo bir GPS uygulaması değil, bir platform PoC'sidir.
+- **Metin görsel olmak zorundadır.** Yeni *dinamik* metin eklemek, `scripts/gen_assets.py` içindeki glif atlasını (`CHARS`'a karakter ekleyerek) genişletmeyi ve yeniden derlemeyi gerektirir; atlas dışındaki karakterler `?` olarak çizilir.
+- **Çok sayıda glif görseli uygulamayı yavaşlatır.** Yüzlerce `<image>` çizmek ekranı belirgin biçimde yavaşlatır; ekrandaki glif görseli sayısını az tutun.
+- **`npm audit`**, `aiot-toolkit`'in geçişli geliştirme bağımlılıklarında güvenlik açıkları bildirir. Bunlar yalnızca derleme zamanıyla ilgilidir ve `.rpk` paketine dâhil olmaz.
 
 * * *
 

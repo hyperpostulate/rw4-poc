@@ -26,7 +26,7 @@ Hiyerarşi renkle değil, görsel boyutuyla sağlanır.
 
 - **Başlık:** 310×42 px görsel ( "Redmi Watch 4 PoC" )
 - **Etiket:** 150×25 px görsel
-- **Değer glifi:** 16×22 px (glif hücresi 48×64'ten küçültülür)
+- **Değer glifi:** 16×22 px (üretilen ve gösterilen boyut aynıdır)
 
 ### Boşluk ve Yerleşim (Spacing)
 - **Sol kenar payı:** `16px` (`.app` padding-left).
@@ -61,13 +61,13 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 - Simge konumu ve isim hizası başlatıcı tarafından belirlenir; manifestten değiştirilemez.
 
 ### `txt/title.png`, `txt/lbl_*.png`
-- Yeşil (`#00C853`) metin, şeffaf zemin, 4× süper örnekleme.
-- Etiket tuvali 360×60 (görüntülenen 150×25); başlık tuvali 620×84 (görüntülenen 310×42).
+- Yeşil (`#00C853`) metin, şeffaf zemin.
+- Başlık 310×42 olarak üretilir ve 310×42 olarak gösterilir; etiketler 150×25 olarak üretilir ve 150×25 olarak gösterilir (varlıklar artık gösterilen boyutun 2-3 katı yerine doğrudan hedef boyutta üretilir).
 
 ### `txt/g_<hex>.png` (Glif Atlası)
-- **Boyut:** 48×64 px (ekranda 16×22).
-- Yeşil glif, şeffaf zemin, taban çizgisi hücre içinde 52 px.
-- **Karakter seti (`CHARS`):** `0-9`, `.`, `-`, `:`, `+`, `U`, `T`, `C` — yalnızca saat ekranının üretabileceği karakterler. Yeni dinamik metin eklenirse buraya karakter eklenmelidir.
+- **Boyut:** 16×22 px (üretilen ve ekranda gösterilen aynı boyut).
+- Yeşil glif, şeffaf zemin.
+- **Karakter seti (`CHARS`):** `0-9`, `-`, `:`, `+`, `U`, `T`, `C` — yalnızca saat ekranının üretabileceği karakterler. Kullanılmayan `.` glifi kaldırıldı. Yeni dinamik metin eklenirse buraya karakter eklenmelidir.
 - **Uyarı:** Çok sayıda glif görseli ekranı yavaşlatır; ekrandaki `<image>` sayısını az tutun.
 
 ---
