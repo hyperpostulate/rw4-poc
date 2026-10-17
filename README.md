@@ -45,7 +45,7 @@ Only needed to regenerate the PNG assets (`scripts/gen_assets.py`)
 
 Android phone
 
-Only needed to install the `.rpk` onto the watch (see [kurulum.md](docs/kurulum.md))
+Only needed to install the `.rpk` onto the watch via **Notify for Xiaomi** (see [Installing on the Watch](#installing-on-the-watch))
 
 `aiot-toolkit`
 
@@ -78,7 +78,7 @@ npm run start                        # aiot start --watch (live development)
 python3 scripts/gen_assets.py        # Regenerate the PNG assets from code
 ```
 
-The toolchain is `aiot-toolkit` (`aiot build` / `aiot release` / `aiot start`). The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL). Deployment to the watch itself is described in [docs/kurulum.md](docs/kurulum.md).
+The toolchain is `aiot-toolkit` (`aiot build` / `aiot release` / `aiot start`). The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL). Deployment to the watch itself is described in [Installing on the Watch](#installing-on-the-watch).
 
 For UI preview without hardware, set `SIMULATE = true` at the top of `src/pages/index/index.ux`; the app then drives a slowly rotating synthetic heading and fake coordinates every second instead of calling the real APIs.
 
@@ -103,8 +103,7 @@ redmi-watch4-compass/
 ├── scripts/
 │   └── gen_assets.py          # reproducible Pillow generator for the PNG assets
 ├── docs/
-│   ├── design.md              # UI/UX design specification (Turkish)
-│   └── kurulum.md             # step-by-step .rpk installation guide (Turkish)
+│   └── design.md              # UI/UX design specification (Turkish)
 ├── dist/                      # build output (.rpk) - gitignored
 ├── build/                     # intermediate build output - gitignored
 ├── package.json
@@ -132,10 +131,6 @@ Generates `dial.png`, `index-marker.png` and `logo.png` deterministically; re-re
 `docs/design.md`
 
 The authoritative UI/UX spec (palette, typography, layout, states, copy)
-
-`docs/kurulum.md`
-
-Installation guide for getting the `.rpk` onto a Redmi Watch 4
 
 * * *
 
@@ -169,29 +164,35 @@ Every API call is wrapped in `try/catch` and guarded by capability flags, so a m
 
 ## Installing on the Watch
 
-The `.rpk` is installed from an Android phone over Bluetooth. The stock Mi Fitness build does **not** expose the third-party app installer, so the practical paths are the community tools, with an open-source experimental alternative:
+The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** app (Google Play listing "Notify for Xiaomi/Mi Band 8-10", package `com.mc.xiaomi1`, by OneZeroBit). The Redmi Watch 4 is on the app's official compatibility list, and the app's official site documents installing custom VelaJS (`.rpk`) apps this way.
 
-Path
+> **Verification status:** this route is documented by the official Notify guides, but it has **not yet been tested with Pusula on a real Redmi Watch 4**.
 
-Status
+### Prerequisites
 
-Mi Fitness "Debug → Third-Party Apps"
+- An **Android phone** (iOS cannot install `.rpk` files).
+- **Notify for Xiaomi** installed from Google Play.
+- The watch paired with Notify: the in-app setup wizard fetches the pairing (auth) key through your Xiaomi account, so Mi Fitness does not need to stay installed.
+- Only one app can hold the watch's Bluetooth connection at a time. If Mi Fitness is installed, force-stop it, deny its "Nearby devices" permission, or uninstall it — but **do not un-pair the watch from Mi Fitness before uninstalling**.
 
-Official, but requires a special developer build of Mi Fitness (not the public one)
+### Steps
 
-表盘自定义工具 + Shizuku
+1. Build the package: `npm run build` → `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`.
+2. Open **Notify for Xiaomi**.
+3. Go to **Device**.
+4. Select **Third party app**.
+5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`).
+6. Keep the watch near the phone and follow the guided steps.
+7. When the installation finishes, **Pusula** appears in the watch's app list.
 
-Widely used community path; proven on the Redmi Watch 4
+### Notes
 
-小米穿戴 debug APK
+- The debug-signed `.rpk` produced by `npm run build` is fine for this app: Vela only checks the certificate for watch↔phone Interconnect communication, which Pusula does not use.
+- Redmi Watch 4 limits: at most ~20 quick apps installed, and ~87 MB of free space is required for quick-app installs.
+- To update, build a new `.rpk` and install it over the same package name (`com.hyperpostulate.rw4compass`).
+- Unverified details: the app version that introduced `.rpk` installs, and whether the feature requires the (about €3, one-time) PRO purchase, are not officially documented. The menu labels above are the English ones; the app itself is localized, but the Turkish labels were not verified.
 
-Community debug build; simplest, unofficial APK source
-
-Gadgetbridge
-
-Experimental - `.rpk` support exists since 0.91.0 but was tested on Mi Band 9, **not** on the Redmi Watch 4
-
-Full step-by-step instructions, prerequisites, troubleshooting and safety notes: **[docs/kurulum.md](docs/kurulum.md)**.
+Sources: [Notify for Xiaomi VelaJS install guide](https://mibandnotify.com/xiaomi-mi-band/notify-xms-app-instructions.php) · [Google Play listing](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)
 
 * * *
 
@@ -204,10 +205,6 @@ Contents
 [docs/design.md](docs/design.md)
 
 UI/UX specification: palette, typography scale, layout, states, Turkish copy, asset geometry
-
-[docs/kurulum.md](docs/kurulum.md)
-
-How to install the `.rpk` on a Redmi Watch 4, including the Gadgetbridge experiment
 
 * * *
 
@@ -309,7 +306,7 @@ Yalnızca PNG varlıklarını yeniden üretmek için gerekir (`scripts/gen_asset
 
 Android telefon
 
-Yalnızca `.rpk` dosyasını saate kurmak için gerekir (bkz. [kurulum.md](docs/kurulum.md))
+Yalnızca `.rpk` dosyasını **Notify for Xiaomi** ile saate kurmak için gerekir (bkz. [Saate Kurulum](#saate-kurulum))
 
 `aiot-toolkit`
 
@@ -342,7 +339,7 @@ npm run start                        # aiot start --watch (canlı geliştirme)
 python3 scripts/gen_assets.py        # PNG varlıklarını koddan yeniden üret
 ```
 
-Araç zinciri `aiot-toolkit`'tir (`aiot build` / `aiot release` / `aiot start`). Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir). Saate kurulumun kendisi [docs/kurulum.md](docs/kurulum.md) içinde anlatılır.
+Araç zinciri `aiot-toolkit`'tir (`aiot build` / `aiot release` / `aiot start`). Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir). Saate kurulumun kendisi [Saate Kurulum](#saate-kurulum) bölümünde anlatılır.
 
 Donanım olmadan arayüz önizlemesi için `src/pages/index/index.ux` dosyasının başındaki `SIMULATE = true` yapılır; uygulama gerçek API'ler yerine her saniye yavaşça dönen sentetik bir yön ve sahte koordinatlar üretir.
 
@@ -367,8 +364,7 @@ redmi-watch4-compass/
 ├── scripts/
 │   └── gen_assets.py          # PNG varlıkları için tekrarlanabilir Pillow üreteci
 ├── docs/
-│   ├── design.md              # UI/UX tasarım spesifikasyonu
-│   └── kurulum.md             # adım adım .rpk kurulum kılavuzu
+│   └── design.md              # UI/UX tasarım spesifikasyonu
 ├── dist/                      # derleme çıktısı (.rpk) - gitignore'da
 ├── build/                     # ara derleme çıktısı - gitignore'da
 ├── package.json
@@ -396,10 +392,6 @@ Uygulamanın tamamı: şablon (iki swiper sayfası), script (sensör/GPS mantı�
 `docs/design.md`
 
 Yetkili UI/UX spesifikasyonu (palet, tipografi, yerleşim, durumlar, metinler)
-
-`docs/kurulum.md`
-
-`.rpk` dosyasının Redmi Watch 4'e kurulması kılavuzu
 
 * * *
 
@@ -433,29 +425,35 @@ Her API çağrısı `try/catch` ile sarılır ve yetenek bayraklarıyla korunur;
 
 ## Saate Kurulum
 
-`.rpk` dosyası bir Android telefondan Bluetooth üzerinden kurulur. Stok Mi Fitness, üçüncü taraf uygulama kurucusunu **sunmaz**; bu yüzden pratik yollar topluluk araçlarıdır ve açık kaynaklı deneysel bir alternatif vardır:
+`.rpk` dosyası, Android telefonda yüklü **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** uygulaması (Google Play adı "Notify for Xiaomi/Mi Band 8-10", paket `com.mc.xiaomi1`, geliştirici OneZeroBit) ile Bluetooth üzerinden saate kurulur. Redmi Watch 4, uygulamanın resmî uyumluluk listesinde yer alır; uygulamanın resmî sitesi özel VelaJS (`.rpk`) uygulamalarının bu yolla kurulmasını belgeler.
 
-Yol
+> **Doğrulama durumu:** bu yol Notify'in resmî kılavuzlarınca belgelenmiştir; ancak Pusula ile gerçek bir Redmi Watch 4 üzerinde **henüz test edilmemiştir**.
 
-Durum
+### Ön koşullar
 
-Mi Fitness "Debug → Third-Party Apps"
+- **Android telefon** (iOS ile `.rpk` kurulamaz).
+- Google Play'den kurulmuş **Notify for Xiaomi**.
+- Saatin Notify ile eşlenmiş olması: uygulamadaki kurulum sihirbazı eşleme (auth) anahtarını Xiaomi hesabınız üzerinden alır; Mi Fitness'in kurulu kalması zorunlu değildir.
+- Saatin Bluetooth bağlantısını aynı anda tek uygulama tutabilir. Mi Fitness kuruluysa durdurun, "Yakındaki cihazlar" iznini kaldırın ya da uygulamayı kaldırın — ama **kaldırmadan önce saati Mi Fitness eşleşmesinden ayırmayın**.
 
-Resmî, ama özel bir geliştirici Mi Fitness sürümü gerektirir (herkese açık sürümde yok)
+### Adımlar
 
-表盘自定义工具 + Shizuku
+1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`.
+2. **Notify for Xiaomi**'i açın.
+3. **Device** bölümüne gidin.
+4. **Third party app** seçeneğini seçin.
+5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4compass.debug.1.0.0.rpk`) seçin.
+6. Saati telefonun yakınında tutun ve yönlendirmeli adımları izleyin.
+7. Kurulum bitince **Pusula** saatin uygulama listesinde görünür.
 
-En yaygın topluluk yolu; Redmi Watch 4'te kanıtlanmış
+### Notlar
 
-小米穿戴 debug APK
+- `npm run build` ile üretilen debug imzalı `.rpk` bu uygulama için yeterlidir: Vela sertifikayı yalnızca saat↔telefon Interconnect iletişiminde denetler; Pusula Interconnect kullanmaz.
+- Redmi Watch 4 sınırları: en fazla ~20 hızlı uygulama kurulabilir ve kurulum için ~87 MB boş alan gerekir.
+- Güncelleme için yeni bir `.rpk` derleyip aynı paket adının (`com.hyperpostulate.rw4compass`) üzerine kurun.
+- Doğrulanmayan ayrıntılar: `.rpk` kurulumunu ekleyen uygulama sürümü ve özelliğin (yaklaşık 3 €, tek seferlik) PRO satın alımı gerektirip gerektirmediği resmî olarak belgelenmemiştir. Yukarıdaki menü etiketleri İngilizcedir; uygulama Türkçeleştirilmiştir ama Türkçe etiketler doğrulanamamıştır.
 
-Topluluk debug sürümü; en kolayı, APK kaynağı gayri resmi
-
-Gadgetbridge
-
-Deneysel - `.rpk` desteği 0.91.0'dan beri var ama Mi Band 9'da test edildi, Redmi Watch 4'te **değil**
-
-Adım adım anlatım, ön koşullar, sorun giderme ve güvenlik notları: **[docs/kurulum.md](docs/kurulum.md)**.
+Kaynaklar: [Notify for Xiaomi VelaJS kurulum kılavuzu](https://mibandnotify.com/xiaomi-mi-band/notify-xms-app-instructions.php) · [Google Play sayfası](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)
 
 * * *
 
@@ -468,10 +466,6 @@ Belge
 [docs/design.md](docs/design.md)
 
 UI/UX spesifikasyonu: palet, tipografi ölçeği, yerleşim, durumlar, Türkçe metinler, varlık geometrisi
-
-[docs/kurulum.md](docs/kurulum.md)
-
-`.rpk` dosyasının Redmi Watch 4'e kurulması, Gadgetbridge denemesi dâhil
 
 * * *
 
