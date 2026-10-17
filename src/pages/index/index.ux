@@ -4,46 +4,46 @@
     <div class="screen gps">
       <div class="gps-list">
         <div class="data-row">
-          <text class="label">Enlem</text>
+          <text class="label" style="color:#00C853;font-size:16px;">Enlem</text>
           <div class="value-col">
-            <text class="value">{{ latText }}</text>
-            <text class="sub">{{ latDms }}</text>
+            <text class="value" style="color:#00C853;font-size:20px;">{{ latText }}</text>
+            <text class="sub" style="color:#00C853;font-size:14px;">{{ latDms }}</text>
           </div>
         </div>
 
         <div class="data-row">
-          <text class="label">Boylam</text>
+          <text class="label" style="color:#00C853;font-size:16px;">Boylam</text>
           <div class="value-col">
-            <text class="value">{{ lonText }}</text>
-            <text class="sub">{{ lonDms }}</text>
+            <text class="value" style="color:#00C853;font-size:20px;">{{ lonText }}</text>
+            <text class="sub" style="color:#00C853;font-size:14px;">{{ lonDms }}</text>
           </div>
         </div>
 
         <div class="data-row">
-          <text class="label">İrtifa</text>
-          <text class="value">{{ altText }}</text>
+          <text class="label" style="color:#00C853;font-size:16px;">İrtifa</text>
+          <text class="value" style="color:#00C853;font-size:20px;">{{ altText }}</text>
         </div>
 
         <div class="data-row">
-          <text class="label">Hız</text>
-          <text class="value">{{ speedText }}</text>
+          <text class="label" style="color:#00C853;font-size:16px;">Hız</text>
+          <text class="value" style="color:#00C853;font-size:20px;">{{ speedText }}</text>
         </div>
 
         <div class="data-row">
-          <text class="label">Doğruluk</text>
-          <text class="value">{{ accText }}</text>
+          <text class="label" style="color:#00C853;font-size:16px;">Doğruluk</text>
+          <text class="value" style="color:#00C853;font-size:20px;">{{ accText }}</text>
         </div>
 
         <div class="data-row">
-          <text class="label">Zaman</text>
-          <text class="value">{{ timeText }}</text>
+          <text class="label" style="color:#00C853;font-size:16px;">Zaman</text>
+          <text class="value" style="color:#00C853;font-size:20px;">{{ timeText }}</text>
         </div>
       </div>
 
       <!-- Durum çubuğu -->
       <div class="status-row">
-        <div class="status-dot {{ gpsPulsing ? 'pulsing' : '' }}" style="background-color: {{ gpsStatusColor }};"></div>
-        <text class="status-text" style="color: {{ gpsStatusColor }};">{{ gpsStatusText }}</text>
+        <div class="status-dot" style="background-color: {{ gpsStatusColor }};"></div>
+        <text class="status-text" style="color: {{ gpsStatusColor }};font-size:16px;">{{ gpsStatusText }}</text>
       </div>
     </div>
   </div>
@@ -70,8 +70,7 @@ export default {
     accText: '--',
     timeText: '--',
     gpsStatusText: 'Uydu Bağlantısı Kuruluyor...',
-    gpsStatusColor: '#FFD600',
-    gpsPulsing: true
+    gpsStatusColor: '#FFD600'
   },
 
   onInit() {
@@ -155,13 +154,11 @@ export default {
 
       this.gpsStatusText = 'Sinyal Güçlü'
       this.gpsStatusColor = '#00C853'
-      this.gpsPulsing = false
     } catch (err) {}
   },
 
   _geoFail(code) {
     const c = Number(code)
-    this.gpsPulsing = false
     this.gpsStatusColor = '#CF6679'
     if (c === 203) {
       this._geoUnsupported = true
@@ -179,7 +176,6 @@ export default {
     if (this.gpsStatusText === 'Sinyal Güçlü') return
     this.gpsStatusText = 'Konum Aranıyor...'
     this.gpsStatusColor = '#FFD600'
-    this.gpsPulsing = true
   },
 
   // ------------------------------------------------------------ brightness
@@ -209,7 +205,6 @@ export default {
       this.timeText = this._clock(new Date())
       this.gpsStatusText = 'Sinyal Güçlü'
       this.gpsStatusColor = '#00C853'
-      this.gpsPulsing = false
     }, 1000)
   },
 
@@ -283,7 +278,7 @@ export default {
 
 .label {
   font-size: 16px;
-  color: #BDBDBD;
+  color: #00C853;
 }
 
 .value-col {
@@ -293,13 +288,13 @@ export default {
 
 .value {
   font-size: 20px;
-  color: #FFFFFF;
+  color: #00C853;
   text-align: right;
 }
 
 .sub {
   font-size: 14px;
-  color: #BDBDBD;
+  color: #00C853;
   text-align: right;
 }
 
@@ -323,21 +318,7 @@ export default {
   font-size: 16px;
 }
 
-/* ===================== animation ===================== */
-@keyframes pulse {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.2;
-  }
-}
-
-.pulsing {
-  animation-name: pulse;
-  animation-duration: 1s;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
+text {
+  color: #00C853;
 }
 </style>

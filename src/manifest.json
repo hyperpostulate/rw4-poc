@@ -3,7 +3,7 @@
   "name": "GPS Info",
   "versionName": "1.0.0",
   "versionCode": 1,
-  "minPlatformVersion": 1200,
+  "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
   "simulationVersion": "default",
   "deviceTypeList": [

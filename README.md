@@ -116,7 +116,7 @@ Purpose
 
 `src/manifest.json`
 
-Vela app manifest: `package` = `com.hyperpostulate.gpsinfo`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1200`, `designWidth: 390`, declared features (`system.router`, `system.geolocation`, `system.brightness`) and the `LOCATION` permission
+Vela app manifest: `package` = `com.hyperpostulate.gpsinfo`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1000`, `designWidth: 390`, declared features (`system.router`, `system.geolocation`, `system.brightness`) and the `LOCATION` permission
 
 `src/pages/index/index.ux`
 
@@ -134,13 +134,13 @@ The authoritative UI/UX spec (palette, typography, layout, states, copy)
 
 ## Screen & Features
 
-The app has a **single screen**. Data subscriptions start on page show and stop on page hide to save battery.
+The app has a **single screen**. Data subscriptions start on page show and stop on page hide to save battery. The data is displayed as green text on a black background.
 
 ### Screen — GPS
 
 - Latitude and longitude in decimal degrees plus a smaller DMS line (`41° 00' 29.6" K`).
 - Altitude (metres, GNSS-derived - the Redmi Watch 4 has no barometer), speed (`m/s` and `km/h`), horizontal accuracy, and the last fix time.
-- A status row: searching (pulsing yellow), fix acquired (green "Sinyal Güçlü"), or a mapped error (203 → "Desteklenmiyor", 204 → "Zaman Aşımı", 1000+ → "Konum Kapalı").
+- A status row: searching (yellow), fix acquired (green "Sinyal Güçlü"), or a mapped error (203 → "Desteklenmiyor", 204 → "Zaman Aşımı", 1000+ → "Konum Kapalı").
 
 Every API call is wrapped in `try/catch` and guarded by capability flags, so a missing or failing API is never retried in a loop.
 
@@ -357,7 +357,7 @@ Amaç
 
 `src/manifest.json`
 
-Vela uygulama manifesti: `package` = `com.hyperpostulate.gpsinfo`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1200`, `designWidth: 390`, tanımlı feature'lar (`system.router`, `system.geolocation`, `system.brightness`) ve `LOCATION` izni
+Vela uygulama manifesti: `package` = `com.hyperpostulate.gpsinfo`, `deviceTypeList: ["watch"]`, `minPlatformVersion: 1000`, `designWidth: 390`, tanımlı feature'lar (`system.router`, `system.geolocation`, `system.brightness`) ve `LOCATION` izni
 
 `src/pages/index/index.ux`
 
@@ -375,13 +375,13 @@ Yetkili UI/UX spesifikasyonu (palet, tipografi, yerleşim, durumlar, metinler)
 
 ## Ekran ve Özellikler
 
-Uygulamanın **tek ekranı** vardır. Veri abonelikleri sayfa gösterildiğinde başlar, gizlendiğinde durur (pil tasarrufu).
+Uygulamanın **tek ekranı** vardır. Veri abonelikleri sayfa gösterildiğinde başlar, gizlendiğinde durur (pil tasarrufu). Veriler siyah arka plan üzerinde yeşil metin olarak gösterilir.
 
 ### Ekran — GPS
 
 - Enlem ve boylam, ondalık derece olarak; altında daha küçük DMS satırı (`41° 00' 29.6" K`).
 - İrtifa (metre, GNSS kaynaklı - Redmi Watch 4'te barometre yoktur), hız (`m/s` ve `km/h`), yatay doğruluk ve son düzeltme zamanı.
-- Durum satırı: aranıyor (sarı, nabız animasyonlu), sinyal var (yeşil "Sinyal Güçlü") veya eşlenmiş hata (203 → "Desteklenmiyor", 204 → "Zaman Aşımı", 1000+ → "Konum Kapalı").
+- Durum satırı: aranıyor (sarı), sinyal var (yeşil "Sinyal Güçlü") veya eşlenmiş hata (203 → "Desteklenmiyor", 204 → "Zaman Aşımı", 1000+ → "Konum Kapalı").
 
 Her API çağrısı `try/catch` ile sarılır ve yetenek bayraklarıyla korunur; böylece eksik/başarısız bir API asla döngü içinde tekrar denenmez.
 
