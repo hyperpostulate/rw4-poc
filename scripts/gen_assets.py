@@ -1,31 +1,126 @@
 #!/usr/bin/env python3
 """Reproducible PNG asset generator for gps-info.
 
-Follows docs/design.md section 4. Run from anywhere:
+Why images? The Redmi Watch 4 Vela quick-app runtime does not render any
+text glyphs (verified on device: <text>, <input type=button> and
+<input type=text> all paint nothing / notdef boxes), while <image> renders
+perfectly. So every piece of visible text is pre-rendered here to PNG and
+shown with <image>.
+
+Run from anywhere:
 
     python3 scripts/gen_assets.py
 
 Writes into src/common/:
-  - logo.png          192x192, black rounded square + white location pin
+  - logo.png                     192x192 app icon (black rounded square + pin)
+  - txt/lbl_*.png                static row labels (green)
+  - txt/st_*.png                 status strings (colored)
+  - txt/g_*.png                  monospace glyph cells for dynamic values (green)
 
-Idempotent: running repeatedly produces the same output. After writing
-the file it is re-opened and verified (dimensions + non-blank content).
+Idempotent: running repeatedly produces the same output. Each written file is
+re-opened and verified (dimensions + non-blank content).
 """
 
 import os
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "src", "common")
-os.makedirs(OUT_DIR, exist_ok=True)
+TXT_DIR = os.path.join(OUT_DIR, "txt")
+FONT_PATH = os.path.join(ROOT, "scripts", "assets", "gpsinfo.ttf")
+os.makedirs(TXT_DIR, exist_ok=True)
 
 SS = 4  # supersampling factor for crisp anti-aliasing
 
-# Design palette (docs/design.md section 1)
+# ---- palette (docs/design.md section 1) ----
+GREEN = (0, 200, 83, 255)    # #00C853
+AMBER = (255, 214, 0, 255)   # #FFD600
+RED = (207, 102, 121, 255)   # #CF6679
 WHITE = (255, 255, 255, 255)
-ACCENT_RED = (255, 77, 77, 255)  # #FF4D4D
 BLACK = (0, 0, 0, 255)
 DARK_HOLE = (17, 17, 17, 255)
+
+# ---- text image geometry (design px; PNG is SS x larger) ----
+LABEL_CANVAS = (240, 60)
+LABEL_FONT = 38
+LABEL_AT = (24, 30)  # left-middle anchor (ample left margin: avoids edge clip)
+
+STATUS_CANVAS = (620, 60)
+STATUS_FONT = 34
+STATUS_AT = (6, 30)
+
+GLYPH_CANVAS = (40, 64)
+GLYPH_FONT = 52
+GLYPH_BASELINE = 50  # y of the baseline inside the cell
+
+# Value character set -> file stem. Keep in sync with GMAP in index.ux.
+GLYPHS = {
+    "0": "g_0", "1": "g_1", "2": "g_2", "3": "g_3", "4": "g_4",
+    "5": "g_5", "6": "g_6", "7": "g_7", "8": "g_8", "9": "g_9",
+    ".": "g_dot", "-": "g_dash", "\u00b0": "g_deg", "'": "g_min",
+    '"': "g_sec", ":": "g_colon", "/": "g_slash",
+    "(": "g_lpar", ")": "g_rpar", "+": "g_plus", "\u00b1": "g_pm",
+    " ": "g_sp",
+    "m": "g_m", "s": "g_s", "k": "g_k", "h": "g_h",
+    "K": "g_K", "G": "g_G", "D": "g_D", "B": "g_B",
+}
+
+LABELS = [
+    ("lbl_enlem", "Enlem"),
+    ("lbl_boylam", "Boylam"),
+    ("lbl_irtifa", "\u0130rtifa"),
+    ("lbl_hiz", "H\u0131z"),
+    ("lbl_dogruluk", "Do\u011fruluk"),
+    ("lbl_zaman", "Zaman"),
+]
+
+STATUS = [
+    ("st_uydu", "Uydu Ba\u011flant\u0131s\u0131 Kuruluyor...", AMBER),
+    ("st_araniyor", "Konum Aran\u0131yor...", AMBER),
+    ("st_guclu", "Sinyal G\u00fc\u00e7l\u00fc", GREEN),
+    ("st_desteklenmiyor", "Desteklenmiyor", RED),
+    ("st_zamanasimi", "Zaman A\u015f\u0131m\u0131", RED),
+    ("st_konumkapali", "Konum Kapal\u0131", RED),
+    ("st_sinyalyok", "Sinyal Yok", RED),
+]
+
+
+def _font(size):
+    return ImageFont.truetype(FONT_PATH, size)
+
+
+def _save_verified(name, img, size, allow_blank=False):
+    assert img.size == size, (name, img.size, size)
+    if not allow_blank:
+        assert img.getbbox() is not None, "blank image: %s" % name
+    path = os.path.join(TXT_DIR, name)
+    img.save(path)
+    chk = Image.open(path)
+    chk.load()
+    assert chk.size == size, (name, chk.size, size)
+    if not allow_blank:
+        assert chk.getbbox() is not None, "blank on disk: %s" % name
+
+
+def make_text_image(name, text, size, font_size, at, fill):
+    n = (size[0] * SS, size[1] * SS)
+    img = Image.new("RGBA", n, (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.text((at[0] * SS, at[1] * SS), text, font=_font(font_size * SS),
+           fill=fill, anchor="lm")
+    img = img.resize(size, Image.LANCZOS)
+    _save_verified(name + ".png", img, size)
+
+
+def make_glyph(ch, stem):
+    n = (GLYPH_CANVAS[0] * SS, GLYPH_CANVAS[1] * SS)
+    img = Image.new("RGBA", n, (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    cx = (GLYPH_CANVAS[0] * SS) / 2.0
+    by = GLYPH_BASELINE * SS
+    d.text((cx, by), ch, font=_font(GLYPH_FONT * SS), fill=GREEN, anchor="ms")
+    img = img.resize(GLYPH_CANVAS, Image.LANCZOS)
+    _save_verified(stem + ".png", img, GLYPH_CANVAS, allow_blank=(ch == " "))
 
 
 def make_logo():
@@ -35,84 +130,43 @@ def make_logo():
     d = ImageDraw.Draw(img)
     cx, cy = N / 2.0, N / 2.0
 
-    # 1. Black rounded square background
     margin = int(N * 0.02)
     radius = int(N * 0.22)
-    d.rounded_rectangle(
-        [margin, margin, N - margin, N - margin], 
-        radius=radius, 
-        fill=BLACK
-    )
+    d.rounded_rectangle([margin, margin, N - margin, N - margin],
+                        radius=radius, fill=BLACK)
 
-    # 2. Location Pin Geometry
-    # Positioned slightly above center for visual balance (optical centering)
     head_center_y = cy - (N * 0.05)
     head_rad = N * 0.22
-    tail_bottom_y = cy + (N * 0.22)
-    
-    # Outer Pin Shape (White)
-    # Combine a circle head and a triangular tail
     d.ellipse(
-        [cx - head_rad, head_center_y - head_rad, cx + head_rad, head_center_y + head_rad], 
-        fill=WHITE
-    )
+        [cx - head_rad, head_center_y - head_rad,
+         cx + head_rad, head_center_y + head_rad], fill=WHITE)
     d.polygon(
-        [
-            (cx - head_rad, head_center_y), 
-            (cx + head_rad, head_center_y), 
-            (cx, tail_bottom_y)
-        ], 
-        fill=WHITE
-    )
+        [(cx - head_rad * 0.78, head_center_y + head_rad * 0.62),
+         (cx + head_rad * 0.78, head_center_y + head_rad * 0.62),
+         (cx, cy + N * 0.22)], fill=WHITE)
+    hole = head_rad * 0.42
+    d.ellipse([cx - hole, head_center_y - hole, cx + hole, head_center_y + hole],
+              fill=DARK_HOLE)
 
-    # 3. Inner Detail (The "Hole")
-    hole_rad = N * 0.07
-    # Subtle accent ring around the hole
-    d.ellipse(
-        [cx - hole_rad - 2, head_center_y - hole_rad - 2, cx + hole_rad + 2, head_center_y + hole_rad + 2], 
-        fill=ACCENT_RED
-    )
-    # Dark center
-    d.ellipse(
-        [cx - hole_rad, head_center_y - hole_rad, cx + hole_rad, head_center_y + hole_rad], 
-        fill=DARK_HOLE
-    )
-
-    # Downscale for production size
-    img = img.resize((S, S), Image.LANCZOS)
-    
-    # Flatten onto opaque black RGB to eliminate potential semi-transparent halos
-    bg = Image.new("RGB", (S, S), (0, 0, 0))
-    bg.paste(img, (0, 0), img)
-    
+    out = img.resize((S, S), Image.LANCZOS)
     path = os.path.join(OUT_DIR, "logo.png")
-    bg.save(path)
-    return path, (S, S)
-
-
-def verify(path, expected_size, expect_transparent):
-    im = Image.open(path)
-    assert im.size == expected_size, f"{path}: size {im.size} != {expected_size}"
-    if expect_transparent:
-        assert im.mode == "RGBA", f"{path}: expected RGBA, got {im.mode}"
-        alpha = im.getchannel("A")
-        hist = alpha.histogram()
-        opaque = im.size[0] * im.size[1] - hist[0]
-        assert opaque > 0, f"{path}: fully transparent (blank)"
-        assert opaque < im.size[0] * im.size[1], f"{path}: no transparent area"
-        nonblank = f"{opaque} opaque px"
-    else:
-        colors = im.convert("RGB").getcolors(maxcolors=1 << 24)
-        assert colors and len(colors) > 1, f"{path}: blank single-color image"
-        nonblank = f"{len(colors)} distinct colors"
-    print(f"  ok  {os.path.relpath(path, ROOT)}  {im.size[0]}x{im.size[1]}  {im.mode}  ({nonblank})")
+    out.save(path)
+    chk = Image.open(path)
+    chk.load()
+    assert chk.size == (S, S)
+    assert chk.getbbox() is not None
 
 
 def main():
-    print("generating assets ->", os.path.relpath(OUT_DIR, ROOT))
-    logo_path, logo_size = make_logo()
-    verify(logo_path, logo_size, expect_transparent=False)
-    print("done.")
+    make_logo()
+    for stem, text in LABELS:
+        make_text_image(stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
+    for stem, text, color in STATUS:
+        make_text_image(stem, text, STATUS_CANVAS, STATUS_FONT, STATUS_AT, color)
+    for ch, stem in GLYPHS.items():
+        make_glyph(ch, stem)
+    print("generated %d label + %d status + %d glyph images + logo"
+          % (len(LABELS), len(STATUS), len(GLYPHS)))
 
 
 if __name__ == "__main__":

@@ -1,41 +1,47 @@
 <template>
   <div class="app">
     <div class="screen">
-      <div class="gps-list">
-        <div class="data-row">
-          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Enlem</text>
-          <div class="value-col">
-            <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ latText }}</text>
-            <text class="sub" style="width:240px;height:22px;font-size:14px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ latDms }}</text>
-          </div>
-        </div>
-        <div class="data-row">
-          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Boylam</text>
-          <div class="value-col">
-            <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ lonText }}</text>
-            <text class="sub" style="width:240px;height:22px;font-size:14px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ lonDms }}</text>
-          </div>
-        </div>
-        <div class="data-row">
-          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">İrtifa</text>
-          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ altText }}</text>
-        </div>
-        <div class="data-row">
-          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Hız</text>
-          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ speedText }}</text>
-        </div>
-        <div class="data-row">
-          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Doğruluk</text>
-          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ accText }}</text>
-        </div>
-        <div class="data-row">
-          <text class="label" style="width:120px;height:26px;font-size:16px;lines:1;color:#00C853;">Zaman</text>
-          <text class="value" style="width:240px;height:28px;font-size:20px;lines:1;text-align:right;text-overflow:ellipsis;color:#00C853;">{{ timeText }}</text>
+      <div class="row">
+        <image class="lbl" src="/common/txt/lbl_enlem.png"></image>
+        <div class="vals">
+          <div class="vline"><image class="g1" for="{{ latRow }}" src="{{ $item }}"></image></div>
+          <div class="vline"><image class="g2" for="{{ latDmsRow }}" src="{{ $item }}"></image></div>
         </div>
       </div>
-      <div class="status-row">
-        <div class="status-dot" style="width:12px;height:12px;background-color:{{ gpsStatusColor }};"></div>
-        <text class="status-text" style="width:320px;height:24px;font-size:16px;lines:1;text-overflow:ellipsis;color:{{ gpsStatusColor }};">{{ gpsStatusText }}</text>
+      <div class="row">
+        <image class="lbl" src="/common/txt/lbl_boylam.png"></image>
+        <div class="vals">
+          <div class="vline"><image class="g1" for="{{ lonRow }}" src="{{ $item }}"></image></div>
+          <div class="vline"><image class="g2" for="{{ lonDmsRow }}" src="{{ $item }}"></image></div>
+        </div>
+      </div>
+      <div class="row">
+        <image class="lbl" src="/common/txt/lbl_irtifa.png"></image>
+        <div class="vals">
+          <div class="vline"><image class="g1" for="{{ altRow }}" src="{{ $item }}"></image></div>
+        </div>
+      </div>
+      <div class="row">
+        <image class="lbl" src="/common/txt/lbl_hiz.png"></image>
+        <div class="vals">
+          <div class="vline"><image class="g1" for="{{ speedRow }}" src="{{ $item }}"></image></div>
+        </div>
+      </div>
+      <div class="row">
+        <image class="lbl" src="/common/txt/lbl_dogruluk.png"></image>
+        <div class="vals">
+          <div class="vline"><image class="g1" for="{{ accRow }}" src="{{ $item }}"></image></div>
+        </div>
+      </div>
+      <div class="row">
+        <image class="lbl" src="/common/txt/lbl_zaman.png"></image>
+        <div class="vals">
+          <div class="vline"><image class="g1" for="{{ timeRow }}" src="{{ $item }}"></image></div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="dot" style="background-color:{{ statusColor }};"></div>
+        <image class="stimg" src="{{ statusImg }}"></image>
       </div>
     </div>
   </div>
@@ -45,28 +51,61 @@
 import geolocation from '@system.geolocation'
 import brightness from '@system.brightness'
 
-// Dev simulate mode: when true no real API calls are made. Fake GPS
-// coordinates/altitude/speed drive the UI every second so it can be previewed
-// in an emulator. Keep this path small and isolated.
-const SIMULATE = false
+// The Redmi Watch 4 runtime cannot draw text glyphs (verified on device), so
+// every visible string is a pre-rendered PNG (scripts/gen_assets.py). Dynamic
+// values are composed from a monospace glyph atlas via the `for` directive.
+const GMAP = {
+  '0': 'g_0', '1': 'g_1', '2': 'g_2', '3': 'g_3', '4': 'g_4',
+  '5': 'g_5', '6': 'g_6', '7': 'g_7', '8': 'g_8', '9': 'g_9',
+  '.': 'g_dot', '-': 'g_dash', '\u00b0': 'g_deg', "'": 'g_min',
+  '"': 'g_sec', ':': 'g_colon', '/': 'g_slash',
+  '(': 'g_lpar', ')': 'g_rpar', '+': 'g_plus', '\u00b1': 'g_pm',
+  ' ': 'g_sp',
+  'm': 'g_m', 's': 'g_s', 'k': 'g_k', 'h': 'g_h',
+  'K': 'g_K', 'G': 'g_G', 'D': 'g_D', 'B': 'g_B'
+}
+
+function toRow(s) {
+  const out = []
+  const str = (s === null || s === undefined) ? '' : String(s)
+  for (let i = 0; i < str.length; i++) {
+    const stem = GMAP[str.charAt(i)]
+    if (stem) out.push('/common/txt/' + stem + '.png')
+  }
+  return out
+}
+
+function statusImage(state) {
+  if (state === 'ok') return '/common/txt/st_guclu.png'
+  if (state === 'searching') return '/common/txt/st_uydu.png'
+  if (state === 'locating') return '/common/txt/st_araniyor.png'
+  if (state === 'unsupported') return '/common/txt/st_desteklenmiyor.png'
+  if (state === 'timeout') return '/common/txt/st_zamanasimi.png'
+  if (state === 'off') return '/common/txt/st_konumkapali.png'
+  return '/common/txt/st_sinyalyok.png'
+}
+
+function statusDotColor(state) {
+  if (state === 'ok') return '#00C853'
+  if (state === 'searching' || state === 'locating') return '#FFD600'
+  return '#CF6679'
+}
 
 export default {
   private: {
-    // ---- GPS ----
-    latText: '--',
-    lonText: '--',
-    latDms: '--',
-    lonDms: '--',
-    altText: '--',
-    speedText: '--',
-    accText: '--',
-    timeText: '--',
-    gpsStatusText: 'Uydu Bağlantısı Kuruluyor...',
-    gpsStatusColor: '#FFD600'
+    latRow: toRow('--'),
+    lonRow: toRow('--'),
+    latDmsRow: toRow(''),
+    lonDmsRow: toRow(''),
+    altRow: toRow('--'),
+    speedRow: toRow('--'),
+    accRow: toRow('--'),
+    timeRow: toRow('--'),
+    statusImg: statusImage('searching'),
+    statusColor: statusDotColor('searching')
   },
 
   onInit() {
-    // non-reactive internal state
     this._geoActive = false
     this._geoUnsupported = false
     this._simTimer = null
@@ -74,44 +113,52 @@ export default {
 
   onShow() {
     this._setKeepScreenOn(true)
-    if (SIMULATE) {
-      this._startSimulate()
-      return
-    }
     this._startLocation()
   },
 
   onHide() {
-    this._stopSimulate()
     this._stopLocation()
     this._setKeepScreenOn(false)
   },
 
   onDestroy() {
-    this._stopSimulate()
     this._stopLocation()
     this._setKeepScreenOn(false)
   },
 
-  // ----------------------------------------------------------- geolocation
+  // ------------------------------------------------------------- status
+  _setStatus(state) {
+    this.statusImg = statusImage(state)
+    this.statusColor = statusDotColor(state)
+  },
+
+  // --------------------------------------------------------- geolocation
   _startLocation() {
     if (this._geoActive || this._geoUnsupported) return
+    const hasSubscribe = geolocation && typeof geolocation.subscribe === 'function'
+    const hasGet = geolocation && typeof geolocation.getLocation === 'function'
+    if (!hasSubscribe && !hasGet) {
+      this._geoFail(203)
+      return
+    }
+    this._geoActive = true
+    this._setStatus('locating')
     try {
-      if (!geolocation || typeof geolocation.subscribe !== 'function') {
-        this._geoFail(203)
-        return
+      if (hasGet) {
+        geolocation.getLocation({
+          timeout: 15000,
+          success: (res) => this._onGeo(res),
+          fail: (data, code) => this._geoFail(code),
+          complete: () => {}
+        })
       }
-      this._geoActive = true
-      this._setGpsSearching()
-      geolocation.subscribe({
-        callback: (res) => this._onGeo(res),
-        fail: (data, code) => {
-          this._geoActive = false
-          this._geoFail(code)
-        }
-      })
+      if (hasSubscribe) {
+        geolocation.subscribe({
+          callback: (res) => this._onGeo(res),
+          fail: (data, code) => this._geoFail(code)
+        })
+      }
     } catch (err) {
-      this._geoActive = false
       this._geoFail(203)
     }
   },
@@ -133,41 +180,34 @@ export default {
       const lon = res.longitude
       if (typeof lat !== 'number' || typeof lon !== 'number') return
 
-      this.latText = lat.toFixed(5) + '°'
-      this.lonText = lon.toFixed(5) + '°'
-      this.latDms = this._dms(lat, true)
-      this.lonDms = this._dms(lon, false)
+      this.latRow = toRow(lat.toFixed(5) + '\u00b0')
+      this.lonRow = toRow(lon.toFixed(5) + '\u00b0')
+      this.latDmsRow = toRow(this._dms(lat, true))
+      this.lonDmsRow = toRow(this._dms(lon, false))
 
-      this.altText = (typeof res.altitude === 'number' ? Math.round(res.altitude) : '--') + ' m'
+      const alt = (typeof res.altitude === 'number') ? Math.round(res.altitude) + ' m' : '--'
+      this.altRow = toRow(alt)
       const speed = (typeof res.speed === 'number') ? res.speed : 0
-      this.speedText = speed.toFixed(1) + ' m/s (' + (speed * 3.6).toFixed(1) + ' km/h)'
-      this.accText = '± ' + (typeof res.accuracy === 'number' ? res.accuracy.toFixed(1) : '--') + ' m'
-      this.timeText = this._clock(new Date())
+      this.speedRow = toRow(speed.toFixed(1) + ' m/s (' + (speed * 3.6).toFixed(1) + ' km/h)')
+      this.accRow = toRow('\u00b1 ' + (typeof res.accuracy === 'number' ? res.accuracy.toFixed(1) : '--') + ' m')
+      this.timeRow = toRow(this._clock(new Date()))
 
-      this.gpsStatusText = 'Sinyal Güçlü'
-      this.gpsStatusColor = '#00C853'
+      this._setStatus('ok')
     } catch (err) {}
   },
 
   _geoFail(code) {
     const c = Number(code)
-    this.gpsStatusColor = '#CF6679'
     if (c === 203) {
       this._geoUnsupported = true
-      this.gpsStatusText = 'Desteklenmiyor'
+      this._setStatus('unsupported')
     } else if (c === 204) {
-      this.gpsStatusText = 'Zaman Aşımı'
+      this._setStatus('timeout')
     } else if (c >= 1000) {
-      this.gpsStatusText = 'Konum Kapalı'
+      this._setStatus('off')
     } else {
-      this.gpsStatusText = 'SİNYAL YOK (Kod: ' + c + ')'
+      this._setStatus('nosignal')
     }
-  },
-
-  _setGpsSearching() {
-    if (this.gpsStatusText === 'Sinyal Güçlü') return
-    this.gpsStatusText = 'Konum Aranıyor...'
-    this.gpsStatusColor = '#FFD600'
   },
 
   // ------------------------------------------------------------ brightness
@@ -183,30 +223,6 @@ export default {
     } catch (err) {}
   },
 
-  // --------------------------------------------------------------- simulate
-  _startSimulate() {
-    if (this._simTimer) return
-    this._simTimer = setInterval(() => {
-      this.latText = '41.00823°'
-      this.lonText = '28.97839°'
-      this.latDms = this._dms(41.00823, true)
-      this.lonDms = this._dms(28.97839, false)
-      this.altText = '152 m'
-      this.speedText = '1.2 m/s (4.3 km/h)'
-      this.accText = '± 3.5 m'
-      this.timeText = this._clock(new Date())
-      this.gpsStatusText = 'Sinyal Güçlü'
-      this.gpsStatusColor = '#00C853'
-    }, 1000)
-  },
-
-  _stopSimulate() {
-    if (this._simTimer) {
-      clearInterval(this._simTimer)
-      this._simTimer = null
-    }
-  },
-
   // ---------------------------------------------------------- pure helpers
   _dms(deg, isLat) {
     const abs = Math.abs(deg)
@@ -215,7 +231,7 @@ export default {
     const m = Math.floor(mFloat)
     const s = ((mFloat - m) * 60).toFixed(1)
     const hemi = isLat ? (deg >= 0 ? 'K' : 'G') : (deg >= 0 ? 'D' : 'B')
-    return d + '° ' + this._pad2(m) + "' " + s + '" ' + hemi
+    return d + '\u00b0 ' + this._pad2(m) + "' " + s + '" ' + hemi
   },
 
   _pad2(n) {
@@ -238,87 +254,73 @@ export default {
 .screen {
   width: 390px;
   height: 450px;
-  padding: 12px;
+  padding: 14px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   background-color: #000000;
 }
 
-.gps-list {
-  width: 366px;
-  height: 360px;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.data-row {
-  width: 366px;
-  height: 54px;
+.row {
+  width: 360px;
+  height: 56px;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
-.label {
-  width: 120px;
-  height: 26px;
-  font-size: 16px;
-  lines: 1;
-  color: #00C853;
+.lbl {
+  width: 116px;
+  height: 30px;
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
-.value-col {
-  width: 240px;
+.vals {
+  width: 228px;
   height: 52px;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
 }
 
-.value {
-  width: 240px;
-  height: 28px;
-  font-size: 20px;
-  lines: 1;
-  text-align: right;
-  text-overflow: ellipsis;
-  color: #00C853;
+.vline {
+  width: 228px;
+  height: 24px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-.sub {
-  width: 240px;
+.g1 {
+  width: 14px;
   height: 22px;
-  font-size: 14px;
-  lines: 1;
-  text-align: right;
-  text-overflow: ellipsis;
-  color: #00C853;
 }
 
-.status-row {
-  width: 366px;
-  height: 36px;
+.g2 {
+  width: 10px;
+  height: 16px;
+}
+
+.srow {
+  width: 360px;
+  height: 34px;
   margin-top: 6px;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
-.status-dot {
+.dot {
   width: 12px;
   height: 12px;
   border-radius: 6px;
   margin-right: 8px;
 }
 
-.status-text {
-  width: 320px;
-  height: 24px;
-  font-size: 16px;
-  lines: 1;
-  text-overflow: ellipsis;
-  color: #00C853;
+.stimg {
+  width: 296px;
+  height: 30px;
 }
 </style>
