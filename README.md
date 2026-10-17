@@ -150,7 +150,7 @@ Every API call is wrapped in `try/catch` and guarded by capability flags, so a m
 
 The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** app (Google Play listing "Notify for Xiaomi/Mi Band 8-10", package `com.mc.xiaomi1`, by OneZeroBit). The Redmi Watch 4 is on the app's official compatibility list, and the app's official site documents installing custom VelaJS (`.rpk`) apps this way.
 
-> **Verification status:** this route is documented by the official Notify guides, but it has **not yet been tested with GPS Info on a real Redmi Watch 4**.
+> **Verification status:** verified on a real Redmi Watch 4 — GPS Info installed successfully with this method. The watch-side GPS data display has not been checked yet.
 
 ### Prerequisites
 
@@ -391,7 +391,7 @@ Her API çağrısı `try/catch` ile sarılır ve yetenek bayraklarıyla korunur;
 
 `.rpk` dosyası, Android telefonda yüklü **[Notify for Xiaomi](https://play.google.com/store/apps/details?id=com.mc.xiaomi1)** uygulaması (Google Play adı "Notify for Xiaomi/Mi Band 8-10", paket `com.mc.xiaomi1`, geliştirici OneZeroBit) ile Bluetooth üzerinden saate kurulur. Redmi Watch 4, uygulamanın resmî uyumluluk listesinde yer alır; uygulamanın resmî sitesi özel VelaJS (`.rpk`) uygulamalarının bu yolla kurulmasını belgeler.
 
-> **Doğrulama durumu:** bu yol Notify'in resmî kılavuzlarınca belgelenmiştir; ancak GPS Info ile gerçek bir Redmi Watch 4 üzerinde **henüz test edilmemiştir**.
+> **Doğrulama durumu:** gerçek bir Redmi Watch 4 üzerinde doğrulandı — GPS Info bu yöntemle başarıyla kuruldu. Saatte GPS verisi gösterimi henüz kontrol edilmedi.
 
 ### Ön koşullar
 
