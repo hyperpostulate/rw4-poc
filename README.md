@@ -3,6 +3,7 @@
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
+![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4. The project began as a GPS/compass idea, but the watch exposes **no GNSS or health API** to third-party apps, so GPS is impossible on this device (see [On-device findings](#on-device-findings)). What ships instead is a **platform PoC**: the smallest useful app — a clock — that documents what a Vela quick app can and cannot do here.
 
@@ -131,6 +132,7 @@ redmi-watch4-compass/
 ├── dist/                      # build output (.rpk) - gitignored
 ├── build/                     # intermediate build output - gitignored
 ├── package.json
+├── LICENSE                   # GPLv3 full text
 └── README.md
 ```
 
@@ -169,7 +171,7 @@ Verified on a **real Redmi Watch 4**. Full detail — including the complete sys
 
 ## License
 
-No license file is currently included in this repository. Until one is added, all rights are reserved by the author.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** — see the [LICENSE](LICENSE) file for the full license text.
 
 * * *
 
@@ -197,6 +199,7 @@ No license file is currently included in this repository. Until one is added, al
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
+![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`). Proje bir GPS/pusula fikri olarak başladı; ancak saat, üçüncü taraf uygulamalara **GNSS veya sağlık API'si sunmaz**, dolayısıyla bu cihazda GPS imkânsızdır (bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular)). Bunun yerine gelen şey bir **platform PoC**'sidir: burada bir Vela hızlı uygulamasının neleri yapabildiğini belgeleyen en küçük kullanışlı uygulama — bir saat.
 
@@ -325,6 +328,7 @@ redmi-watch4-compass/
 ├── dist/                      # derleme çıktısı (.rpk) - gitignore'da
 ├── build/                     # ara derleme çıktısı - gitignore'da
 ├── package.json
+├── LICENSE                   # GPLv3 full text
 └── README.md
 ```
 
@@ -363,7 +367,7 @@ redmi-watch4-compass/
 
 ## Lisans
 
-Bu depoda şu anda bir lisans dosyası bulunmamaktadır. Bir lisans eklenene kadar tüm haklar yazar tarafından saklıdır.
+Bu proje **GNU Genel Kamu Lisansı v3.0 (GPL-3.0)** ile lisanslanmıştır — lisansın tam metni için [LICENSE](LICENSE) dosyasına bakın.
 
 * * *
 
