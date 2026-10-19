@@ -34,6 +34,13 @@ There is **no GNSS sensor API** in Vela and **no step/heart-rate/health API** ex
 - Verified on device: a **`192x192`** icon (the size the Vela docs recommend) pushed the app name to the *middle* of the row, while shrinking the icon to **`96x96`** pulled the name back to its normal position.
 - No manifest field controls the label's position, alignment or size (`name` is the only label input), so the icon is the only lever. Shipping a **`96x96`** `logo.png` is therefore deliberate, not an accident.
 
+## Canvas crashes the device
+
+- Verified on-device with a canvas probe build of **another project based on this one**: the Vela runtime **exposes a complete canvas JS API surface** — `this.$element('cv')` resolves the node, `getContext('2d')` returns a context object, `fillRect`/`drawImage` are callable functions, and a global `Image` constructor exists. An API-presence probe therefore passes cleanly and no automatic fallback triggers.
+- But the canvas **paints nothing**: the screen stayed permanently black (not even a solid green `fillRect` diagnosis strip appeared), and shortly after, using it **crashed the quick app runtime so hard that the watch rebooted**.
+- Corroboration: `<canvas>` is absent from the official Vela component catalog. The aiot-toolkit compiler whitelist accepts the tag, but that proves nothing about the runtime — the parser is hap-derived and permissive (it also whitelists `web`, `video`, `camera`, `map`).
+- **Consequence:** canvas is unusable and unsafe on this device. Any renderer must compose pre-rendered PNGs with `<image>` nodes; there is no single-surface drawing alternative. The downstream project has since reverted to its `<image>`-grid renderer.
+
 * * *
 
 # Cihaz üstü bulgular — rw4-poc (Redmi Watch 4)
@@ -71,3 +78,10 @@ Vela'da **GNSS sensör API'si yoktur** ve hızlı uygulamalara açık **adım/na
 - Başlatıcı, uygulama isminin solunda bir alan ayırır ve bu alanın **genişliği simge PNG'sinin piksel boyutunu izler** — yani ismin nereden başlayacağını da simge belirler.
 - Cihazda doğrulandı: **`192x192`** simge (Vela dokümanlarının önerdiği boyut) uygulama ismini satırın *ortasına* itti; simgeyi **`96x96`**'ya küçültmek ismi normal konumuna geri getirdi.
 - İsmin konumunu, hizasını veya boyutunu kontrol eden bir manifest alanı yoktur (`name` tek etiket girdisidir); tek kaldıraç simgedir. Bu yüzden **`96x96`** `logo.png` bilinçlidir, tesadüf değildir.
+
+## Canvas cihazı çökertiyor
+
+- **Bu projeden temellenen başka bir projenin** canvas deneme derlemesiyle cihaz üstünde doğrulandı: Vela çalışma zamanı **eksiksiz bir canvas JS API yüzeyi sunar** — `this.$element('cv')` düğümü bulur, `getContext('2d')` bir bağlam nesnesi döndürür, `fillRect`/`drawImage` çağrılabilir fonksiyonlardır ve global bir `Image` yapıcısı vardır. Dolayısıyla API-varlığı denemesi temiz geçer; otomatik bir yedek devreye girmez.
+- Ancak canvas **hiçbir şey çizmez**: ekran kalıcı olarak siyah kaldı (düz yeşil bir `fillRect` teşhis şeridi bile görünmedi) ve kullanıldıktan kısa süre sonra quick app çalışma zamanını **saat yeniden başlayacak kadar sert çökertti**.
+- Destekleyici kanıt: `<canvas>` resmî Vela bileşen kataloğunda yoktur. aiot-toolkit derleyici beyaz listesi etiketi kabul eder ama bu, çalışma zamanı hakkında hiçbir şey kanıtlamaz — ayrıştırıcı hap kaynaklı ve izin vericidir (`web`, `video`, `camera`, `map`'i de beyaz listeye alır).
+- **Sonuç:** canvas bu cihazda kullanılamaz ve güvenli değildir. Her işleyici önceden üretilmiş PNG'leri `<image>` düğümleriyle dizmek zorundadır; tek yüzeyli çizim alternatifi yoktur. Sözü edilen proje, `<image>`-ızgara işleyicisine geri dönmüştür.
