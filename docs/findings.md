@@ -41,6 +41,14 @@ There is **no GNSS sensor API** in Vela and **no step/heart-rate/health API** ex
 - Corroboration: `<canvas>` is absent from the official Vela component catalog. The aiot-toolkit compiler whitelist accepts the tag, but that proves nothing about the runtime — the parser is hap-derived and permissive (it also whitelists `web`, `video`, `camera`, `map`).
 - **Consequence:** canvas is unusable and unsafe on this device. Any renderer must compose pre-rendered PNGs with `<image>` nodes; there is no single-surface drawing alternative. The downstream project has since reverted to its `<image>`-grid renderer.
 
+## Image-grid update cost (for-list re-render model)
+
+- Measured on-device with a ~270-cell `<image>` grid app (**another project based on this one**, a matrix-rain screen): for `for`-rendered lists, the framework's cost unit is the **list re-render per observed array mutation** — roughly ~0.1 s per touched list on this device — not the number of cells that changed.
+- Assigning a **fresh array reference** (e.g. `this.grid = rebuilt`) re-sets the whole nested list structure and cost ~7–8 s per frame at 17-item lists; updating the **same array in place** avoids that entirely.
+- Batch mutations: **one full-range `splice` per changed list** (via `splice.apply`, the form that is safe on the Vela JS engine) beats per-cell splices (~3–4 s → ~2 s per frame), because the per-mutation list re-render dominates.
+- Layout orientation determines what you can batch: a **column-major** data layout (one `for` list per screen column) with one splice per changed column reached ~1 s per frame at 17 rows; with fewer, slower columns the same app settles at ~0.8 s per frame — the practical floor for that grid density on this device.
+- **Consequence:** for animated `<image>` grids, keep the data arrays stable, group changes per list, and issue exactly one splice per changed list. Canvas is not an alternative (see above).
+
 * * *
 
 # Cihaz üstü bulgular — rw4-poc (Redmi Watch 4)
@@ -85,3 +93,11 @@ Vela'da **GNSS sensör API'si yoktur** ve hızlı uygulamalara açık **adım/na
 - Ancak canvas **hiçbir şey çizmez**: ekran kalıcı olarak siyah kaldı (düz yeşil bir `fillRect` teşhis şeridi bile görünmedi) ve kullanıldıktan kısa süre sonra quick app çalışma zamanını **saat yeniden başlayacak kadar sert çökertti**.
 - Destekleyici kanıt: `<canvas>` resmî Vela bileşen kataloğunda yoktur. aiot-toolkit derleyici beyaz listesi etiketi kabul eder ama bu, çalışma zamanı hakkında hiçbir şey kanıtlamaz — ayrıştırıcı hap kaynaklı ve izin vericidir (`web`, `video`, `camera`, `map`'i de beyaz listeye alır).
 - **Sonuç:** canvas bu cihazda kullanılamaz ve güvenli değildir. Her işleyici önceden üretilmiş PNG'leri `<image>` düğümleriyle dizmek zorundadır; tek yüzeyli çizim alternatifi yoktur. Sözü edilen proje, `<image>`-ızgara işleyicisine geri dönmüştür.
+
+## Görsel-ızgara güncelleme maliyeti (for-listesi yeniden render modeli)
+
+- ~270 hücreli bir `<image>` ızgara uygulamasıyla (**bu projeden temellenen başka bir proje**, bir matrix yağmuru ekranı) cihaz üstünde ölçüldü: `for` ile render edilen listelerde çerçevenin maliyet birimi, gözlenen her dizi mutasyonu başına düşen **liste yeniden render'ıdır** — bu cihazda dokunulan liste başına kabaca ~0,1 sn; değişen hücre sayısı değil.
+- **Taze bir dizi referansı atamak** (örn. `this.grid = yenidenKurulmuş`) iç içe yapının tamamındaki listeleri yeniden ayarlar ve 17 öğeli listelerde kare başına ~7–8 sn'ye mal oldu; **aynı diziyi yerinde** güncellemek bunu tamamen ortadan kaldırır.
+- Mutasyonları toplu yapın: değişen liste başına **tek tam-aralık `splice`** (Vela JS motorunda güvenli olan biçimle: `splice.apply`) hücre başına splice'lardan iyidir (~3–4 sn → ~2 sn/kare), çünkü baskın maliyet mutasyon başına liste yeniden render'ıdır.
+- Topulaştırmayı yapabilen şey yerleşim yönüdür: **kolon-major** veri düzeni (ekran kolonu başına bir `for` listesi) ve değişen kolon başına tek splice ile 17 satırda kare başına ~1 sn'ye ulaşıldı; daha az ve daha yavaş kolonla aynı uygulama kare başına ~0,8 sn'de sabitlendi — bu cihazda o ızgara yoğunluğu için pratik taban.
+- **Sonuç:** canlandırılan `<image>` ızgaralarında veri dizilerini kararlı tutun, değişiklikleri liste başına gruplayın ve değişen her listeye tam olarak bir splice uygulayın. Canvas bir alternatif değildir (yukarıya bkz.).
