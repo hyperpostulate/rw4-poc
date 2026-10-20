@@ -24,6 +24,8 @@ The only working system APIs are: **JS clock (`new Date()`), `@system.storage` (
 | Counters & lists | tally counter, water-intake counter, shopping list | tap to increment; state persists across restarts via `@system.storage` |
 | Chance & games | dice, coin flip, tap-timing games, visual memory games | text does not render, so these must be fully visual; vibration is a good feedback channel |
 | Static info cards | emergency contact, WiFi password, blood type | entirely pre-rendered content, zero runtime data |
+| QR codes | WiFi-sharing QR, vCard, ticket/room code, runtime-computed QR | static payload → one pre-rendered PNG from `gen_assets.py`; changing payload → pure-JS QR encoder + `<image>` grid (**canvas is unusable**, see [findings](findings.md)); merge horizontal runs of dark modules to keep the image count low; max out `@system.brightness` while the code is shown |
+| One-time passwords | TOTP authenticator (30 s time-based codes), HOTP authenticator (tap advances the counter) | pure-JS HMAC-SHA1 (`@system.crypto` is absent) — digits `0-9` are already in the glyph atlas; clock drives TOTP, `@system.storage` + tap drives HOTP; the secret must be embedded at build time (nothing can be typed or received on the watch, and it is extractable from the `.rpk`) |
 | Screen tools | brightness controller, full-screen white flashlight | `@system.brightness` works |
 
 ### What cannot be built (do-not-attempt list)
@@ -68,6 +70,8 @@ Bu depo aynı zamanda bir **şablon artı cihaz kılavuzudur**: derleme zinciri 
 | Sayaç ve listeler | el hizalaması sayacı, su sayacı, alışveriş listesi | dokunarak artırma; durum `@system.storage` ile yeniden başlatmalarda kalıcı |
 | Şans ve oyunlar | zar, yazı-tura, dokunma-zamanlaması oyunları, görsel hafıza oyunları | metin çizilmediği için tamamen görsel tasarım gerekir; titreşim iyi bir geri bildirim kanalıdır |
 | Statik bilgi kartları | acil iletişim bilgisi, WiFi şifresi, kan grubu | tümüyle önceden üretilmiş içerik, sıfır çalışma zamanı verisi |
+| QR kodları | WiFi paylaşım QR'u, vCard, bilet/oda kodu, çalışma zamanında hesaplanan QR | sabit içerik → `gen_assets.py` ile üretilen tek PNG; değişen içerik → saf JS QR kodlayıcı + `<image>` ızgarası (**canvas kullanılamaz**, bkz. [bulgular](findings.md)); karanlık modüllerin yatay koşularını birleştirerek görsel sayısını düşürün; kod görünürken `@system.brightness`'ı sonuna kadar açın |
+| Tek seferlik şifreler | TOTP kimlik doğrulayıcı (30 saniyelik zaman tabanlı kodlar), HOTP kimlik doğrulayıcı (dokunuş sayacı ilerletir) | saf JS HMAC-SHA1 (`@system.crypto` yok) — `0-9` rakamları glif atlasında zaten var; TOTP'yi saat, HOTP sayacını `@system.storage` + dokunuş sürer; sır build zamanında gömülmek zorunda (saatte yazılamaz ya da alınamaz ve `.rpk` içinden çıkarılabilir) |
 | Ekran araçları | parlaklık kontrolcüsü, tam ekran beyaz fener | `@system.brightness` çalışıyor |
 
 ### Yapılamayacaklar (denemeyin listesi)
