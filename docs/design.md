@@ -16,7 +16,7 @@ AMOLED enerji tasarrufu için tamamen siyah arka plan zorunludur.
 Redmi Watch 4'ün Vela çalışma zamanı `<text>`/`<span>`/`<input>` bileşenleri için **hiçbir okunabilir glif çizmez** (gerçek cihazda doğrulandı; paketlenen bir `@font-face` fontu da etkisizdir). `<image>` ise sorunsuz çizilir. Bu nedenle:
 
 - **Statik yazılar** (başlık, etiketler) tek bir PNG olarak üretilip `<image src="...">` ile gösterilir.
-- **Dinamik değerler** (tarih, saat, dilim, unix) tek aralıklı bir **glif atlasından** dizilir: her karakter için ayrı bir şeffaf PNG (`src/common/txt/g_<kod noktası hex>.png`). Şablonda `for="{{ row }}"` + `src="{{ $item }}"` ile karakter başına bir `<image>` çizilir.
+- **Dinamik değerler** (date, time, zone, unix) tek aralıklı bir **glif atlasından** dizilir: her karakter için ayrı bir şeffaf PNG (`src/common/txt/g_<kod noktası hex>.png`). Şablonda `for="{{ row }}"` + `src="{{ $item }}"` ile karakter başına bir `<image>` çizilir.
 - Atlas dışı bir karakter `?` olarak çizilir (`0x3F`).
 
 Tüm görseller `scripts/gen_assets.py` tarafından belirlenimci biçimde üretilir ve her dosya yazıldıktan sonra geri okunup doğrulanır.
@@ -42,10 +42,10 @@ Elemanlar yukarıdan aşağıya dikey bir liste halinde sıralanır. Her satır;
 
 | Alan | Format | Örnek |
 | :--- | :--- | :--- |
-| **Tarih** | `YYYY-AA-GG` | `2026-10-18` |
-| **Saat** | `SS:DD:SS` (her saniye) | `14:23:05` |
-| **Dilim** | `UTC±SS:DD` | `UTC+03:00` |
-| **Unix** | saniye (tam sayı) | `1760797385` |
+| **Date** | `YYYY-AA-GG` | `2026-10-18` |
+| **Time** | `SS:DD:SS` (her saniye) | `14:23:05` |
+| **Zone** | `UTC±SS:DD` | `UTC+03:00` |
+| **UNIX Timestamp** | saniye (tam sayı) | `1760797385` |
 
 ### Durum Matrisi
 Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sayfa gösterildiğinde başlar, gizlendiğinde/destroy edildiğinde durur (pil tasarrufu). Uygulama hiçbir izin istemez; yalnızca JS saati (`new Date()`) kullanılır.

@@ -2,16 +2,16 @@
   <div class="app">
     <image class="title" src="/common/txt/title.png"></image>
     <div class="row">
-      <image class="lbl" src="/common/txt/lbl_tarih.png"></image>
-      <div class="val"><image class="g" for="{{ tarihRow }}" src="{{ $item }}"></image></div>
+      <image class="lbl" src="/common/txt/lbl_date.png"></image>
+      <div class="val"><image class="g" for="{{ dateRow }}" src="{{ $item }}"></image></div>
     </div>
     <div class="row">
-      <image class="lbl" src="/common/txt/lbl_saat.png"></image>
-      <div class="val"><image class="g" for="{{ saatRow }}" src="{{ $item }}"></image></div>
+      <image class="lbl" src="/common/txt/lbl_time.png"></image>
+      <div class="val"><image class="g" for="{{ timeRow }}" src="{{ $item }}"></image></div>
     </div>
     <div class="row">
-      <image class="lbl" src="/common/txt/lbl_dilim.png"></image>
-      <div class="val"><image class="g" for="{{ dilimRow }}" src="{{ $item }}"></image></div>
+      <image class="lbl" src="/common/txt/lbl_zone.png"></image>
+      <div class="val"><image class="g" for="{{ zoneRow }}" src="{{ $item }}"></image></div>
     </div>
     <div class="row">
       <image class="lbl" src="/common/txt/lbl_unix.png"></image>
@@ -24,10 +24,10 @@
 // Minimal time PoC.
 //
 // Shows only data every Vela quick app can read everywhere: the device clock.
-//   Tarih  - local date            e.g. 2026-10-18
-//   Saat   - local time            e.g. 14:23:05
-//   Dilim  - UTC offset            e.g. UTC+03:00
-//   Unix   - unix timestamp (s)    e.g. 1760797385
+//   Date           - local date          e.g. 2026-10-18
+//   Time           - local time          e.g. 14:23:05
+//   Zone           - UTC offset          e.g. UTC+03:00
+//   UNIX Timestamp - unix time (s)       e.g. 1760797385
 //
 // Text is image-based: the Redmi Watch 4 runtime cannot draw <text> glyphs, so
 // every string is composed from pre-rendered glyph PNGs (scripts/gen_assets.py)
@@ -48,9 +48,9 @@ function pad2(n) {
 
 export default {
   private: {
-    tarihRow: [],
-    saatRow: [],
-    dilimRow: [],
+    dateRow: [],
+    timeRow: [],
+    zoneRow: [],
     unixRow: []
   },
 
@@ -83,14 +83,14 @@ export default {
 
   _tick() {
     const d = new Date()
-    this.tarihRow = glyphs(d.getFullYear() + '-' +
+    this.dateRow = glyphs(d.getFullYear() + '-' +
       pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()))
-    this.saatRow = glyphs(pad2(d.getHours()) + ':' +
+    this.timeRow = glyphs(pad2(d.getHours()) + ':' +
       pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()))
     const mins = -d.getTimezoneOffset()
     const sign = mins < 0 ? '-' : '+'
     const abs = Math.abs(mins)
-    this.dilimRow = glyphs('UTC' + sign +
+    this.zoneRow = glyphs('UTC' + sign +
       pad2(Math.floor(abs / 60)) + ':' + pad2(abs % 60))
     this.unixRow = glyphs(Math.floor(d.getTime() / 1000))
   }

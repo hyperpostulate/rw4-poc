@@ -76,10 +76,10 @@ TITLE = ("title", "Redmi Watch 4 PoC")
 CHARS = list("0123456789-:+UTC")
 
 LABELS = [
-    ("tarih", "Tarih"),
-    ("saat", "Saat"),
-    ("dilim", "Dilim"),
-    ("unix", "Unix"),
+    ("date", "Date"),
+    ("time", "Time"),
+    ("zone", "Zone"),
+    ("unix", "UNIX Timestamp"),
 ]
 
 

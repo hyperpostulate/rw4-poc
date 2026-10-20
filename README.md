@@ -2,7 +2,7 @@
 
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-1.0.1-green)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4. The project began as a GPS/compass idea, but the watch exposes **no GNSS or health API** to third-party apps, so GPS is impossible on this device (see [On-device findings](#on-device-findings)). What ships instead is a **platform PoC**: the smallest useful app — a clock — that documents what a Vela quick app can and cannot do here.
@@ -36,10 +36,10 @@ One screen — black background, green values — with exactly four fields read 
 
 | Field | Meaning | Example |
 | :-- | :-- | :-- |
-| **Tarih** | Local date | `2026-10-18` |
-| **Saat** | Local time (updates every second) | `14:23:05` |
-| **Dilim** | UTC offset | `UTC+03:00` |
-| **Unix** | Unix timestamp (seconds) | `1760797385` |
+| **Date** | Local date | `2026-10-18` |
+| **Time** | Local time (updates every second) | `14:23:05` |
+| **Zone** | UTC offset | `UTC+03:00` |
+| **UNIX Timestamp** | Unix timestamp (seconds) | `1760797385` |
 
 No permission is requested: the JS clock needs none.
 
@@ -51,6 +51,8 @@ The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify
 
 > **Verification status:** verified on a real Redmi Watch 4 — this PoC installs and runs correctly with this method.
 
+> **Bump the version on every build.** Notify for Xiaomi and the watch cache quick-app packages by `versionName` and `versionCode`. If both are unchanged, the cached build can be installed instead of the fresh `.rpk`. Before every build, increment both fields in `src/manifest.json`; `versionName` is also part of the output filename, so a bump gives a distinct file as well (`dist/com.hyperpostulate.rw4poc.debug.<versionName>.rpk`).
+
 ### Prerequisites
 
 - An **Android phone** (iOS cannot install `.rpk` files).
@@ -60,11 +62,11 @@ The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify
 
 ### Steps
 
-1. Build the package: `npm run build` → `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`.
+1. Build the package: `npm run build` → `dist/com.hyperpostulate.rw4poc.debug.1.0.1.rpk`.
 2. Open **Notify for Xiaomi**.
 3. Go to **Device**.
 4. Select **Third party app**.
-5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`).
+5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4poc.debug.1.0.1.rpk`).
 6. Keep the watch near the phone and follow the guided steps.
 7. When the installation finishes, **RW4 - PoC** appears in the watch's app list.
 
@@ -101,12 +103,12 @@ npm run start                        # aiot start --watch (live development)
 python3 scripts/gen_assets.py        # Regenerate the PNG assets from code
 ```
 
-The toolchain is `aiot-toolkit`. Every text asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
+The toolchain is `aiot-toolkit`. Every text asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4poc.debug.1.0.1.rpk`. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
 
 On-device verification checklist:
 
-1. Do the four values (Tarih, Saat, Dilim, Unix) render and match the phone?
-2. Does `Saat` advance every second?
+1. Do the four values (Date, Time, Zone, UNIX Timestamp) render and match the phone?
+2. Does `Time` advance every second?
 3. Is the app responsive (no visible lag)?
 
 * * *
@@ -202,7 +204,7 @@ This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**
 
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-1.0.1-green)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`). Proje bir GPS/pusula fikri olarak başladı; ancak saat, üçüncü taraf uygulamalara **GNSS veya sağlık API'si sunmaz**, dolayısıyla bu cihazda GPS imkânsızdır (bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular)). Bunun yerine gelen şey bir **platform PoC**'sidir: burada bir Vela hızlı uygulamasının neleri yapabildiğini belgeleyen en küçük kullanışlı uygulama — bir saat.
@@ -236,10 +238,10 @@ Tek ekran — siyah arka plan, yeşil değerler — cihaz saatinden okunan tam o
 
 | Alan | Anlamı | Örnek |
 | :-- | :-- | :-- |
-| **Tarih** | Yerel tarih | `2026-10-18` |
-| **Saat** | Yerel saat (her saniye güncellenir) | `14:23:05` |
-| **Dilim** | UTC farkı | `UTC+03:00` |
-| **Unix** | Unix zaman damgası (saniye) | `1760797385` |
+| **Date** | Yerel tarih | `2026-10-18` |
+| **Time** | Yerel saat (her saniye güncellenir) | `14:23:05` |
+| **Zone** | UTC farkı | `UTC+03:00` |
+| **UNIX Timestamp** | Unix zaman damgası (saniye) | `1760797385` |
 
 Hiçbir izin istenmez: JS saati hiçbir izin gerektirmez.
 
@@ -251,6 +253,8 @@ Hiçbir izin istenmez: JS saati hiçbir izin gerektirmez.
 
 > **Doğrulama durumu:** gerçek bir Redmi Watch 4 üzerinde doğrulandı — bu PoC bu yöntemle sorunsuz kurulup çalışıyor.
 
+> **Her build'de sürümü artırın.** Notify for Xiaomi ve saat, hızlı uygulama paketlerini `versionName` ve `versionCode` değerlerine göre önbelleğe alır. İkisi de değişmezse yeni `.rpk` yerine önbellekteki eski paket kurulabilir. Her build'den önce `src/manifest.json` içindeki iki alanı da artırın; `versionName` aynı zamanda çıktı dosya adında yer aldığı için artırım ayrı bir dosya da üretir (`dist/com.hyperpostulate.rw4poc.debug.<versionName>.rpk`).
+
 ### Ön koşullar
 
 - **Android telefon** (iOS ile `.rpk` kurulamaz).
@@ -260,11 +264,11 @@ Hiçbir izin istenmez: JS saati hiçbir izin gerektirmez.
 
 ### Adımlar
 
-1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`.
+1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.rw4poc.debug.1.0.1.rpk`.
 2. **Notify for Xiaomi**'i açın.
 3. **Device** bölümüne gidin.
 4. **Third party app** seçeneğini seçin.
-5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk`) seçin.
+5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4poc.debug.1.0.1.rpk`) seçin.
 6. Saati telefonun yakınında tutun ve yönlendirmeli adımları izleyin.
 7. Kurulum bitince **RW4 - PoC** saatin uygulama listesinde görünür.
 
@@ -301,12 +305,12 @@ npm run start                        # aiot start --watch (canlı geliştirme)
 python3 scripts/gen_assets.py        # PNG varlıklarını koddan yeniden üret
 ```
 
-Araç zinciri `aiot-toolkit`'tir. Her metin varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4poc.debug.1.0.0.rpk` dosyasını üretir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
+Araç zinciri `aiot-toolkit`'tir. Her metin varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4poc.debug.1.0.1.rpk` dosyasını üretir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
 
 Cihaz üstü kontrol listesi:
 
-1. Dört değer (Tarih, Saat, Dilim, Unix) çiziliyor ve telefonla uyuşuyor mu?
-2. `Saat` her saniye ilerliyor mu?
+1. Dört değer (Date, Time, Zone, UNIX Timestamp) çiziliyor ve telefonla uyuşuyor mu?
+2. `Time` her saniye ilerliyor mu?
 3. Uygulama akıcı mı (görünür gecikme yok mu)?
 
 * * *
