@@ -17,7 +17,8 @@ Everything below was verified on a **real Redmi Watch 4**; the official Xiaomi V
 | `@system.battery` (level) | ❌ not supported |
 | `@system.network` | ❌ not supported |
 | `@system.bluetooth`, `@system.record`, `@system.fetch`, `@system.crypto` | ❌ not supported |
-| `@system.device` (`getInfo`, storage sizes) | ✅ works |
+| `@system.device` (`getInfo`) | ✅ works |
+| `@system.device` storage sizes (`getTotalStorage`, `getAvailableStorage`) | ❌ no data on this unit |
 | `@system.storage` (local key/value) | ✅ works |
 | `@system.brightness` | ✅ works |
 | `@system.app` | ✅ works |
@@ -70,7 +71,8 @@ Aşağıdaki her şey **gerçek bir Redmi Watch 4** üzerinde doğrulandı; resm
 | `@system.battery` (pil) | ❌ desteklenmiyor |
 | `@system.network` | ❌ desteklenmiyor |
 | `@system.bluetooth`, `@system.record`, `@system.fetch`, `@system.crypto` | ❌ desteklenmiyor |
-| `@system.device` (`getInfo`, depolama boyutları) | ✅ çalışıyor |
+| `@system.device` (`getInfo`) | ✅ çalışıyor |
+| `@system.device` depolama boyutları (`getTotalStorage`, `getAvailableStorage`) | ❌ bu cihazda veri dönmüyor |
 | `@system.storage` (yerel anahtar/değer) | ✅ çalışıyor |
 | `@system.brightness` | ✅ çalışıyor |
 | `@system.app` | ✅ çalışıyor |
