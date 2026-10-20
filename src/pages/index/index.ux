@@ -17,6 +17,7 @@
       <image class="lbl" src="/common/txt/lbl_unix.png"></image>
       <div class="val"><image class="g" for="{{ unixRow }}" src="{{ $item }}"></image></div>
     </div>
+    <image class="ver" src="/common/txt/ver_1_0_1.png"></image>
   </div>
 </template>
 
@@ -125,7 +126,7 @@ export default {
 }
 
 .lbl {
-  width: 150px;
+  width: 156px;
   height: 25px;
   margin-left: 4px;
 }
@@ -141,5 +142,14 @@ export default {
 .g {
   width: 16px;
   height: 22px;
+}
+
+/* Version footer: single static PNG, text drawn flush right inside the canvas,
+   so the 360px box keeps the text right-aligned without runtime layout. */
+.ver {
+  width: 360px;
+  height: 20px;
+  margin-left: 4px;
+  margin-top: 23px;
 }
 </style>

@@ -25,14 +25,17 @@ Tüm görseller `scripts/gen_assets.py` tarafından belirlenimci biçimde üreti
 Hiyerarşi renkle değil, görsel boyutuyla sağlanır.
 
 - **Başlık:** 310×42 px görsel ( "Redmi Watch 4 PoC" )
-- **Etiket:** 150×25 px görsel
+- **Etiket:** 156×25 px görsel
 - **Değer glifi:** 16×22 px (üretilen ve gösterilen boyut aynıdır)
+- **Sürüm altbilgisi:** 360×20 px görsel, 13 px metin, tuval içinde sağa yaslı
 
 ### Boşluk ve Yerleşim (Spacing)
 - **Sol kenar payı:** `16px` (`.app` padding-left).
 - **Üst kenar payı:** `44px` (yuvarlak ekran köşesinden kaçınmak için başlık bir satır aşağıda).
 - **Başlık altı boşluk:** `18px`.
 - **Satır aralığı:** `16px` (her `.row` margin-bottom).
+- **Altbilgi:** Son satırdan `23px` sonra; alt kenardan ~51px yukarıda (ekranın alt köşe eğrisinden uzak durmak için).
+- **Sağ kenar payı:** `16px` + görsel içi `40px` (sağa yaslı metin; son karakter yuvarlak köşede kırpılmasın diye).
 
 ---
 
@@ -62,7 +65,13 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 
 ### `txt/title.png`, `txt/lbl_*.png`
 - Yeşil (`#00C853`) metin, şeffaf zemin.
-- Başlık 310×42 olarak üretilir ve 310×42 olarak gösterilir; etiketler 150×25 olarak üretilir ve 150×25 olarak gösterilir (varlıklar artık gösterilen boyutun 2-3 katı yerine doğrudan hedef boyutta üretilir).
+- Başlık 310×42 olarak üretilir ve 310×42 olarak gösterilir; etiketler 156×25 olarak üretilir ve 156×25 olarak gösterilir (varlıklar artık gösterilen boyutun 2-3 katı yerine doğrudan hedef boyutta üretilir).
+
+### `txt/ver_<sürüm>.png` (Sürüm Altbilgisi)
+- **Boyut:** 360×20 px (üretilen ve gösterilen aynı boyut), şeffaf zemin, yeşil (`#00C853`) metin.
+- **İçerik:** `rw4-poc.version:<versionName>`; `<versionName>` **üretim anında** `src/manifest.json`'dan okunur (`_version_name()`), çalışma zamanında hesaplanmaz.
+- **Dosya adı sürüme bağlıdır** (`ver_1_0_8.png`): cihaz, görselleri yol bazında önbelleğe aldığı için sabit adlı `ver.png` kurulumdan sonra da eski içerikle kalıyordu (cihazda doğrulandı: JS güncelleniyor, aynı adlı görsel güncellenmiyor). Sürüm arttığında `gen_assets.py` yeni adlı dosyayı üretir **ve** `index.ux` içindeki tek `<image src>` referansını kendisi günceller.
+- Sağa yaslama tuval içinde yapılır: metin sağa `40px` payla çizilir (ekranın alt-sağ köşesindeki görünür alan daraldığı için), CSS'te ayrı bir hizalama kuralı gerekmez.
 
 ### `txt/g_<hex>.png` (Glif Atlası)
 - **Boyut:** 16×22 px (üretilen ve ekranda gösterilen aynı boyut).
@@ -80,7 +89,8 @@ Tek durum vardır: saatin her saniye yenilenmesi. Bir saniyelik `setInterval` sa
 .app { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding-left: 16px; padding-top: 44px; background-color: #000000; }
 .title { width: 310px; height: 42px; margin-left: 4px; margin-bottom: 18px; }
 .row { width: 360px; flex-direction: column; align-items: flex-start; justify-content: flex-start; margin-bottom: 16px; }
-.lbl { width: 150px; height: 25px; margin-left: 4px; }
+.lbl { width: 156px; height: 25px; margin-left: 4px; }
 .val { width: 348px; flex-direction: row; align-items: center; justify-content: flex-start; margin-left: 4px; }
 .g { width: 16px; height: 22px; }
+.ver { width: 360px; height: 20px; margin-left: 4px; margin-top: 23px; }
 ```

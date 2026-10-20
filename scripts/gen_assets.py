@@ -23,13 +23,17 @@ Writes into src/common/txt/:
 Idempotent, and every written file is re-opened and verified.
 """
 
+import json
 import os
+import re
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "src", "common")
 TXT_DIR = os.path.join(OUT_DIR, "txt")
 FONT_PATH = os.path.join(ROOT, "scripts", "assets", "ui-subset.ttf")
+MANIFEST_PATH = os.path.join(ROOT, "src", "manifest.json")
+UX_PATH = os.path.join(ROOT, "src", "pages", "index", "index.ux")
 
 if os.path.isdir(TXT_DIR):
     for name in os.listdir(TXT_DIR):
@@ -49,7 +53,7 @@ WHITE = (255, 255, 255, 255)  # #FFFFFF
 # stretches each PNG to its box, so generating at 1x is both smaller and
 # sharper than the old oversized (2-3x) assets. SS is an internal supersample
 # factor used only while drawing, never the stored size.
-LABEL_CANVAS = (150, 25)
+LABEL_CANVAS = (156, 25)
 LABEL_FONT = 17
 LABEL_AT = (3, 12)            # left-middle anchor
 
@@ -69,6 +73,16 @@ TITLE_FONT = 27
 TITLE_AT = (4, 21)
 TITLE = ("title", "Redmi Watch 4 PoC")
 
+# Right-aligned version footer ("rw4-poc.version:1.0.2"). The version comes from
+# src/manifest.json at generation time, so a bump only needs the manifest edit
+# followed by a re-run of this script. The canvas is the on-screen box width;
+# the text is drawn flush right inside it.
+FOOTER_CANVAS = (360, 20)
+FOOTER_FONT = 17
+FOOTER_RIGHT = 20             # gap between text and the canvas right edge;
+                              # the on-device visible area cuts the bottom-right,
+                              # so the text is pulled well inside the screen edge
+
 # ---- character set for the glyph atlas ----
 # Exactly what the clock screen can render: digits, the date separator "-",
 # the UTC-offset separators ":"/"+" (and "-" for negative offsets) and "UTC".
@@ -76,10 +90,10 @@ TITLE = ("title", "Redmi Watch 4 PoC")
 CHARS = list("0123456789-:+UTC")
 
 LABELS = [
-    ("date", "Date"),
-    ("time", "Time"),
-    ("zone", "Zone"),
-    ("unix", "UNIX Timestamp"),
+    ("date", "Date:"),
+    ("time", "Time:"),
+    ("zone", "Zone:"),
+    ("unix", "UNIX Timestamp:"),
 ]
 
 
@@ -106,6 +120,39 @@ def make_text_image(name, text, size, font_size, at, fill):
            fill=fill, anchor="lm")
     img = img.resize(size, Image.LANCZOS)
     _save_verified(name + ".png", img, size)
+
+
+def make_footer(text, name):
+    size = FOOTER_CANVAS
+    n = (size[0] * SS, size[1] * SS)
+    img = Image.new("RGBA", n, (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.text(((size[0] - FOOTER_RIGHT) * SS, (size[1] / 2) * SS), text,
+           font=_font(FOOTER_FONT * SS), fill=GREEN, anchor="rm")
+    img = img.resize(size, Image.LANCZOS)
+    _save_verified(name, img, size)
+
+
+def _sync_footer_src(name):
+    """Point index.ux at the freshly generated footer PNG.
+
+    The footer asset is named after the manifest version (ver_1_0_8.png) on
+    purpose: the watch keeps image resources cached per path across installs,
+    so a stable `ver.png` never updates on device. Rewriting the one <image>
+    src keeps the "bump manifest + run this script" workflow intact."""
+    with open(UX_PATH, encoding="utf-8") as f:
+        text = f.read()
+    pattern = re.compile(r'/common/txt/ver[^"\']*\.png')
+    new, count = pattern.subn("/common/txt/" + name, text)
+    assert count == 1, ("expected exactly one footer image src in index.ux", count)
+    if new != text:
+        with open(UX_PATH, "w", encoding="utf-8") as f:
+            f.write(new)
+
+
+def _version_name():
+    with open(MANIFEST_PATH, encoding="utf-8") as f:
+        return json.load(f)["versionName"]
 
 
 def make_glyph(ch):
@@ -174,8 +221,12 @@ def main():
         make_text_image("lbl_" + stem, text, LABEL_CANVAS, LABEL_FONT, LABEL_AT, GREEN)
     for ch in CHARS:
         make_glyph(ch)
-    print("generated watch-motif logo + title + %d labels + %d glyphs"
-          % (len(LABELS), len(CHARS)))
+    version = _version_name()
+    footer = "ver_%s.png" % version.replace(".", "_")
+    make_footer("rw4-poc.version: " + version, footer)
+    _sync_footer_src(footer)
+    print("generated watch-motif logo + title + %d labels + %d glyphs + footer %s (%s)"
+          % (len(LABELS), len(CHARS), footer, version))
 
 
 if __name__ == "__main__":
