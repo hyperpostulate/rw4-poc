@@ -28,7 +28,7 @@ A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4. The project b
 
 The repository started as a GPS/compass experiment; on-device testing proved a GPS quick app cannot exist on the Redmi Watch 4, so it became a platform PoC instead. It is deliberately tiny: one screen, no permissions, and a written record of what a third-party Vela quick app can actually do.
 
-To build your own app on top of this template, see **[docs/developing.md](docs/developing.md)**.
+To build your own app on top of this template, see **[docs/development.md](docs/development.md)**.
 
 ## What it shows
 
@@ -133,7 +133,7 @@ redmi-watch4-compass/
 ├── docs/
 │   ├── design.md              # UI/UX design specification (Turkish)
 │   ├── findings.md            # bilingual on-device findings
-│   └── developing.md          # bilingual guide: developing new apps from this template
+│   └── development.md         # bilingual guide: developing new apps from this template
 ├── dist/                      # build output (.rpk) - gitignored
 ├── build/                     # intermediate build output - gitignored
 ├── package.json
@@ -150,7 +150,7 @@ redmi-watch4-compass/
 | `scripts/gen_assets.py` | Generates the title, the labels, the glyph atlas and the launcher icon (a 96x96 watch motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank content for the text images) |
 | `docs/design.md` | The authoritative UI/UX spec (palette, geometry, text-as-image approach) |
 | `docs/findings.md` | Full bilingual write-up of the on-device findings |
-| `docs/developing.md` | Bilingual guide to developing new apps from this template (feasible app types, step-by-step checklist) |
+| `docs/development.md` | Bilingual guide to developing new apps from this template (feasible app types, step-by-step checklist) |
 
 * * *
 
@@ -230,7 +230,7 @@ Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`). Pro
 
 Depo bir GPS/pusula denemesi olarak başladı; cihaz üstü testler Redmi Watch 4'te bir GPS hızlı uygulamasının var olamayacağını gösterdi, bu yüzden bir platform PoC'sine dönüştü. Bilinçli olarak çok küçüktür: tek ekran, izin yok ve bir üçüncü taraf Vela hızlı uygulamasının gerçekte neleri yapabildiğinin yazılı kaydı.
 
-Bu şablonun üzerinde kendi uygulamanızı geliştirmek için bkz. **[docs/developing.md](docs/developing.md)**.
+Bu şablonun üzerinde kendi uygulamanızı geliştirmek için bkz. **[docs/development.md](docs/development.md)**.
 
 ## Ne gösterir
 
@@ -335,7 +335,7 @@ redmi-watch4-compass/
 ├── docs/
 │   ├── design.md              # UI/UX tasarım spesifikasyonu
 │   ├── findings.md            # iki dilli cihaz üstü bulgular
-│   └── developing.md          # iki dilli kılavuz: bu şablondan yeni uygulama geliştirme
+│   └── development.md         # iki dilli kılavuz: bu şablondan yeni uygulama geliştirme
 ├── dist/                      # derleme çıktısı (.rpk) - gitignore'da
 ├── build/                     # ara derleme çıktısı - gitignore'da
 ├── package.json
@@ -352,7 +352,7 @@ redmi-watch4-compass/
 | `scripts/gen_assets.py` | Başlığı, etiketleri, glif atlasını ve başlatıcı simgesini (96x96 saat motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (metin görsellerinde ayrıca boş olmadığını) doğrular |
 | `docs/design.md` | Yetkili UI/UX spesifikasyonu (palet, geometri, metin-görsel yaklaşımı) |
 | `docs/findings.md` | Cihaz üstü bulguların tam iki dilli yazımı |
-| `docs/developing.md` | Bu şablondan yeni uygulama geliştirme kılavuzu (mümkün uygulama türleri, adım adım kontrol listesi) |
+| `docs/development.md` | Bu şablondan yeni uygulama geliştirme kılavuzu (mümkün uygulama türleri, adım adım kontrol listesi) |
 
 * * *
 

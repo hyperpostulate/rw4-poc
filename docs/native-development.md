@@ -49,6 +49,19 @@ Costs and limits of this path:
 - **No persistence** across reboots without a firmware modification.
 - **No public RW4 native GUI framework** yet (Doom-on-RW4 is unfinished).
 
+## Watch-face access to GNSS
+
+The quick-app runtime cannot read location on RW4 (`@system.geolocation` → error `203`; see [findings.md](findings.md)). Could a **watch face** do it instead? Short answer: not through any supported API; conditionally through undocumented runtime access — proven on sibling BES2700 watches, unproven on RW4.
+
+- **Official watch-face data sources: no location.** The Vela face model is declarative — a face declares data-source IDs and widget bindings, and the OS fills them in. The RW4 source catalogue (Mi Create, `src/data/sources.json`, filtered to `redmi_watch_4`, 76 entries) covers time/date, weather, battery, Bluetooth, steps, heart rate, calories, stand, SpO2, stress, sleep and alarm; there is no `gps`, `gnss`, `lat`, `lon`, `location` or `altitude` source. [REPO] Caveat: Xiaomi's watch-face developer docs are not publicly reachable, so "no location source" is inferred from the shipped catalogue, not from a quotable spec line.
+- **Undocumented Lua runtime access is proven on sibling watches.** Mi Band 9 Pro (`Compass`) reads `require("uorb")` + `/dev/uorb/sensor_gps0` (32-byte sample; latitude at offset 17, longitude at 21, altitude at 25). Mi Band 10 Pro (`UorbGPS`) opens the same node with raw `io.open` and renders "open failed" when it is absent. [REPO: m0tral/MiWatchLuaWatchfaces] RW4 faces inspected (`Diffusion`, `AnalogTime`, `TouchEvents`, a community calendar face) use only `lvgl`, `dataman` and `topic`; no public RW4 face uses `uorb`, and whether the node exists in the RW4 runtime is unknown.
+- **Native `insmod` path: loading is proven on RW4, GNSS access is not.** RW4 runs unsigned NuttX ELF modules loaded from a privileged Lua face (Pizofh, stock FW 2.2.86 — see above). A native module could in principle open the GNSS character device directly, but no public sensor/GPS module exists; that is an inference about NuttX, not a demonstration.
+- **The hardware exists; the limit is software.** RW4 pairs the BES2700iBP with a separate **Synaptics SYN47752B1** GNSS SoC (GPS/Galileo/GLONASS/BeiDou/QZSS), used by the stock workout app. [OFFICIAL product page/FAQ; RE teardown]
+
+Decisive cheap test: run the Mi Band 10 Pro `UorbGPS` pattern on an RW4 face — `io.open("/dev/uorb/sensor_gps0", "rb")` (render or log whether it opened) and then `ls /dev/uorb/`. If the node exists, the path is real.
+
+Note: the watch-face toolchain itself is unofficial (third-party compiler, no published face format), so this is a research lead, not a supported route.
+
 ## Custom firmware: blocked
 
 - OTA packages are ZIPs (`ota.json`, `vela_ap.bin`, resource bins) with CRC32 and **signature verification that cannot be disabled**; the bootloader validates the app before jumping. [FORUM: 4PDA] [RE: m0tral RW5 bootloader analysis]
@@ -76,12 +89,16 @@ Pizofh independently observed that **text does not render in the Lua/LVGL runtim
 - openvela native app tutorial: https://github.com/open-vela/docs/blob/dev/zh-cn/app_dev/system_apps/Dev_UI_App.md
 - openvela supported boards (no Xiaomi watch): https://github.com/open-vela/docs/blob/dev/zh-cn/dev_board/Development_Board.md
 - open-vela/vendor_bes (BES2600WM/BEST2003 only): https://github.com/open-vela/vendor_bes
+- Xiaomi Vela quick-app geolocation support (Redmi Watch 4: not supported, error `203`): https://iot.mi.com/vela/quickapp/en/features/system/geolocation.html
+- Redmi Watch 4 product page (independent GNSS, multi-constellation): https://www.mi.com/global/product/redmi-watch-4
+- Redmi Watch 4 GNSS FAQ: https://www.mi.com/global/support/faq/details/KA-91528
 
 **Repositories / technical write-ups**
 
 - Pizofh — native research on physical RW4 (checkpoint log): https://github.com/Pizofh/Doomed---Doom-for-Redmi-watch-4-
 - m0tral — native apps on Xiaomi watches: https://github.com/m0tral/MiWatchNativeApps · https://habr.com/ru/articles/1079066/
 - m0tral — EasyFace / emulator / Lua watchfaces: https://github.com/m0tral/EasyFace · https://github.com/m0tral/MiWatchEmulator · https://github.com/m0tral/MiWatchLuaWatchfaces
+- Mi Create — community watch-face editor; its `src/data/sources.json` (filtered to `redmi_watch_4`) is the data-source catalogue cited above.
 - AstroBox-NG (Vela BLE protocol reimplementation): https://github.com/AstralSightStudios/AstroBox-NG
 - MiWearBridge (LSPosed hooks for Mi Fitness): https://github.com/batareya16/MiWearBridge
 - Vela-Shell-Bridge (Lua shell daemon for QuickApps): https://github.com/FangAiden/Vela-Shell-Bridge
@@ -147,6 +164,19 @@ Bu yolun maliyetleri ve sınırları:
 - **Sandbox yok** — openvela SSS'si Flat Build'in çekirdek adres alanını paylaştığını doğrular; bir çöküş tüm sistemi düşürebilir. [OFFICIAL]
 - **Kalıcılık yok** — bir firmware değişikliği olmadan reboot'lardan sonra kalmaz.
 - **Herkese açık RW4 native GUI çerçevesi henüz yok** (RW4'te Doom bitirilemedi).
+
+## Watch face'ten GNSS erişimi
+
+Quick app çalışma zamanı RW4'te konum okuyamaz (`@system.geolocation` → hata `203`; bkz. [findings.md](findings.md)). Peki aynı şeyi bir **watch face** yapabilir mi? Kısa cevap: desteklenen hiçbir API ile hayır; belgelenmemiş çalışma zamanı erişimiyle şartlı olarak evet — kardeş BES2700 saatlerinde kanıtlanmış, RW4'te kanıtlanmamış.
+
+- **Resmî watch-face veri kaynaklarında konum yok.** Vela face modeli bildirimseldir — face, veri kaynağı ID'lerini ve widget bağlarını tanımlar, OS doldurur. RW4 kaynak kataloğu (Mi Create, `src/data/sources.json`, `redmi_watch_4` filtresi, 76 kayıt) saat/tarih, hava, pil, Bluetooth, adım, nabız, kalori, ayakta, SpO2, stres, uyku ve alarmı kapsar; `gps`, `gnss`, `lat`, `lon`, `location` ya da `altitude` kaynağı yoktur. [REPO] Uyarı: Xiaomi'nin watch-face geliştirici dokümanları kamuya açık değildir; "konum kaynağı yok" sonucu gönderilen katalogdan çıkarılmıştır, alıntılanabilir bir spec satırından değil.
+- **Belgelenmemiş Lua çalışma zamanı erişimi kardeş saatlerde kanıtlı.** Mi Band 9 Pro (`Compass`) `require("uorb")` + `/dev/uorb/sensor_gps0` okur (32 baytlık örnek; enlem offset 17, boylam 21, irtifa 25). Mi Band 10 Pro (`UorbGPS`) aynı düğümü ham `io.open` ile açar ve düğüm yoksa "open failed" basar. [REPO: m0tral/MiWatchLuaWatchfaces] İncelenen RW4 face'leri (`Diffusion`, `AnalogTime`, `TouchEvents`, bir topluluk takvim face'i) yalnızca `lvgl`, `dataman` ve `topic` kullanır; `uorb` kullanan kamuya açık bir RW4 face'i yoktur ve düğümün RW4 çalışma zamanında var olup olmadığı bilinmiyor.
+- **Native `insmod` yolu: yükleme RW4'te kanıtlı, GNSS erişimi değil.** RW4, ayrıcalıklı bir Lua face'ten yüklenen imzasız NuttX ELF modüllerini çalıştırır (Pizofh, stok FW 2.2.86 — yukarıya bkz.). Native bir modül prensip olarak GNSS karakter aygıtını doğrudan açabilir, ama kamuya açık bir sensör/GPS modülü yoktur; bu NuttX hakkında bir çıkarımdır, gösterim değil.
+- **Donanım var; kısıt yazılım.** RW4, BES2700iBP'nin yanında ayrı bir **Synaptics SYN47752B1** GNSS SoC'si barındırır (GPS/Galileo/GLONASS/BeiDou/QZSS) ve stok antrenman uygulaması bunu kullanır. [OFFICIAL ürün sayfası/SSS; RE sökümü]
+
+Kararı verdirecek ucuz test: Mi Band 10 Pro `UorbGPS` desenini bir RW4 face'inde çalıştır — `io.open("/dev/uorb/sensor_gps0", "rb")` (açılıp açılmadığını logla/göster) ve ardından `ls /dev/uorb/`. Düğüm varsa yol gerçektir.
+
+Not: watch-face araç zincirinin kendisi resmî değildir (üçüncü taraf derleyici, yayımlanmış face formatı yok); yani bu desteklenen bir yol değil, bir araştırma ipucudur.
 
 ## Custom firmware: kapalı
 

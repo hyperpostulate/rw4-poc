@@ -37,7 +37,7 @@ The only working system APIs are: **JS clock (`new Date()`), `@system.storage` (
 
 **The QR egress channel:** the watch has no camera, but the phone does. Anything the watch produces or accumulates (a generated secret, a logbook summary) can be displayed as a runtime-computed QR (see the QR row above) and scanned by the phone — the platform's only data-out path. Limits: QR capacity (at most ~2.9 KB, at large versions) and the image count of large matrices; a few hundred bytes is the realistic payload, to be verified on device.
 
-**Beyond quick apps and watch faces:** whether the platform can be targeted in lower-level ways — privileged Lua watch faces, native C/C++ loaded as NuttX ELF modules, custom firmware — is researched in [native-paths.md](native-paths.md).
+**Beyond quick apps and watch faces:** whether the platform can be targeted in lower-level ways — privileged Lua watch faces, native C/C++ loaded as NuttX ELF modules, custom firmware — is researched in [native-development.md](native-development.md).
 
 ### What cannot be built (do-not-attempt list)
 
@@ -96,7 +96,7 @@ Bu depo aynı zamanda bir **şablon artı cihaz kılavuzudur**: derleme zinciri 
 
 **QR çıkış kanalı:** saatin kamerası yok ama telefonunki var. Saatin ürettiği ya da biriktirdiği her şey (üretilmiş bir sır, kayıt defteri özeti) çalışma zamanında hesaplanan QR olarak (yukarıdaki QR satırına bkz.) ekrana basılıp telefonla okutulabilir — platformun tek veri çıkış yolu. Sınırlar: QR kapasitesi (büyük sürümlerde en çok ~2,9 KB) ve büyük matrislerin görsel sayısı; gerçekçi payload birkaç yüz bayttır, cihazda doğrulanmalıdır.
 
-**Quick app ve watch face ötesi:** platforma daha düşük seviyeli yollarla — ayrıcalıklı Lua watch face'ler, NuttX ELF modülü olarak native C/C++, custom firmware — hitap edilip edilemeyeceği [native-paths.md](native-paths.md) içinde araştırıldı.
+**Quick app ve watch face ötesi:** platforma daha düşük seviyeli yollarla — ayrıcalıklı Lua watch face'ler, NuttX ELF modülü olarak native C/C++, custom firmware — hitap edilip edilemeyeceği [native-development.md](native-development.md) içinde araştırıldı.
 
 ### Yapılamayacaklar (denemeyin listesi)
 
